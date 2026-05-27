@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lee Tiktok</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#bb86fc">
+</head>
+<body>
+    <div id="onboarding" class="onboarding-overlay">
+        <div class="onboarding-content">
+            <h1>Lee Tiktok 📱</h1>
+            <p>Lee las frases, atrapa el ritmo y no rompas tu racha.</p>
+            <button id="btn-empezar" class="start-btn">¡Empezar!</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <header class="main-header">
+            <div class="status-bar">
+                <span class="user-greeting" id="greeting">¡Hola! ✨</span>
+                <div class="coin-display">
+                    🔥 <span id="streak">0</span> &nbsp;|&nbsp; ⭐ <span id="points">0</span>
+                    <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="level-progress-bar"></div>
+            </div>
+            <div style="text-align: center; font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">
+                Nivel Actual: <strong id="display-nivel" style="color: var(--accent-purple);">1</strong>
+            </div>
+        </header>
+
+        <main class="feed" id="feed-container">
+            </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" id="btn-home">🏠<span>Inicio</span></button>
+            <button class="nav-btn" id="btn-premios">🎁<span>Premios</span></button>
+        </nav>
+
+        <div id="meme-modal" class="meme-modal hidden">
+            <div class="meme-content">
+                <img id="meme-img" src="" alt="Meme Recompensa">
+            </div>
+        </div>
+
+        <div id="store-modal" class="meme-modal hidden" style="background: rgba(10, 10, 12, 0.98); z-index: 2000;">
+            <div class="store-content">
+                <h2 style="color: var(--accent-coral); margin-bottom: 5px;">Canjea tus ⭐</h2>
+                <p style="color: var(--text-dim); margin-bottom: 15px;">Tienes: <strong style="color: white; font-size: 1.1rem;" id="store-points-display">0</strong></p>
+                
+                <div class="store-items-container">
+                    
+                    <div class="store-item power-up" onclick="leerTexto('Escudo de racha. Cuesta 50 estrellas.')">
+                        <span class="prize-icon">🛡️</span>
+                        <span class="prize-name">Escudo de Racha</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(50, 'Escudo', 1)">⭐ 50</button>
+                    </div>
+
+                    <div class="store-item" onclick="leerTexto('Helado. Cuesta 50 estrellas.')">
+                        <img src="premios/helado.png" alt="Helado" class="prize-img">
+                        <span class="prize-name">Helado</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(50, 'Helado', 1)">⭐ 50</button>
+                    </div>
+                    
+                    <div class="store-item" onclick="leerTexto('Crepe dulce. Cuesta 100 estrellas.')">
+                        <img src="premios/crepe.png" alt="Crepe" class="prize-img">
+                        <span class="prize-name">Crepe dulce</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(100, 'Crepe', 1)">⭐ 100</button>
+                    </div>
+                    
+                    <div class="store-item" onclick="leerTexto('Tacos mexicanos. Cuesta 150 estrellas.')">
+                        <img src="premios/tacos.png" alt="Tacos" class="prize-img">
+                        <span class="prize-name">Tacos (Nivel 2+)</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(150, 'Tacos', 2)">⭐ 150</button>
+                    </div>
+                    
+                    <div class="store-item" onclick="leerTexto('Reloj Inteligente. Cuesta 300 estrellas.')">
+                        <img src="premios/reloj.png" alt="Reloj" class="prize-img">
+                        <span class="prize-name">Reloj Smart (Nivel 3+)</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(300, 'Reloj', 3)">⭐ 300</button>
+                    </div>
+                    
+                    <div class="store-item" onclick="leerTexto('Zapatillas. Cuesta 500 estrellas.')">
+                        <img src="premios/zapatilla.png" alt="Zapatillas" class="prize-img">
+                        <span class="prize-name">Zapatillas (Nivel 4+)</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(500, 'Zapatillas', 4)">⭐ 500</button>
+                    </div>
+                    
+                    <div class="store-item" onclick="leerTexto('Celular nuevo. Cuesta 1000 estrellas.')">
+                        <img src="premios/celular.png" alt="Celular" class="prize-img">
+                        <span class="prize-name">Celular (Nivel 4+)</span>
+                        <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(1000, 'Celular', 4)">⭐ 1000</button>
+                    </div>
+                </div>
+                
+                <button id="btn-cerrar-tienda" class="start-btn" style="margin-top: 25px; font-size: 1rem; padding: 10px 30px; width: auto;">Volver</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="datos.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
