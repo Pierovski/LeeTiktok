@@ -1,3 +1,12 @@
+// --- REGISTRO DEL SERVICE WORKER (Requerido para instalar como App nativa) ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW: Registrado correctamente', reg))
+            .catch(err => console.error('SW: Error al registrar el Service Worker', err));
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const feedContainer = document.getElementById('feed-container');
     const pointsDisplay = document.getElementById('points');
@@ -127,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else { alert("Faltan estrellas ⭐."); }
     };
 
-    // --- EL NUEVO BOTÓN HÍBRIDO ---
+    // --- EL NUEVO BOTÓN HÍBRIDO (Clic normal vs Presión Larga) ---
     function hacerBotonHibrido(boton, textoGuia, funcionClick) {
         let timerPresion;
         let esPresionLarga = false;
@@ -194,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (hora >= 12 && hora < 19) greetingDisplay.innerText = "¡Buenas tardes! 🌆";
     else greetingDisplay.innerText = "¡Buenas noches! 🌙";
 
-    // --- MOTOR DE VOZ (CON ESCUDO ANTI-ATASCOS) ---
+    // --- MOTOR DE VOZ ---
     let vocesDisponibles = [];
     if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => vocesDisponibles = window.speechSynthesis.getVoices();
 
@@ -208,14 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.leerTexto = function(texto, velocidad = 0.8) {
         if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel(); // LIMPIA EL MOTOR PARA QUE NO SE ATASQUE
-        
-        setTimeout(() => { // EL PEQUEÑO DELAY QUE SALVA A ANDROID
-            const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
-            utterance.voice = obtenerMejorVoz();
-            utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
-            window.speechSynthesis.speak(utterance);
-        }, 50);
+        window.speechSynthesis.cancel(); 
+        const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+        utterance.voice = obtenerMejorVoz();
+        utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
+        window.speechSynthesis.speak(utterance);
     };
 
     let tarjetaActualEsTrampa = false;
@@ -234,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         playPop(); 
 
+        // --- MEGA DICCIONARIO FONÉTICO (Calibrado para el español) ---
         const diccionarioFonetico = {
             "to": "tó", "te": "té", "se": "sé", "de": "dé", "tu": "tú", "mi": "mí", "si": "sí", "el": "él",
             "be": "bé", "ge": "jé", "que": "ké", "qui": "kí", "crush": "crash", "pov": "pof",
@@ -252,12 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let card = elementoHtml.closest('.card');
             let silabasFaltantes = card.querySelectorAll('.no-leida');
             
-            // --- SI COMPLETÓ LA FRASE ---
             if (silabasFaltantes.length === 0 && !card.classList.contains('completada')) {
                 card.classList.add('completada'); 
                 modificarEstrellas(5); 
                 registrarRachaPorLectura(); 
-                actualizarBarraProgreso(); // Sube la barra visual
                 
                 audioVictoria.play(); 
                 lanzarConfeti(); 
@@ -268,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     leerTexto(fraseCompleta, 0.85);
                 }, 1500);
 
-                // CREAR BOTÓN DE REPETIR SOLUCIONADO
                 let btnContenedor = card.querySelector('.glass-content');
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
                 if(oldBtn) {
@@ -276,15 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     oldBtn.className = 'play-trigger repetir-btn'; 
                     let newBtn = oldBtn.cloneNode(true);
                     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-                    
-                    // Acción del nuevo botón corregida
                     newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
                         leerTexto(fraseCompleta, 0.85); 
                     });
                 }
 
-                // VERIFICAR SUBIDA DE NIVEL
                 let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
                 if (nivelDeEstaTarjeta === nivelActual) {
                     let totalTarjetasDelNivel = document.querySelectorAll(`.card[data-nivel="${nivelActual}"]`);
@@ -309,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datosMezclados.forEach(item => crearTarjeta(item));
         activarBotonesVoz();
         configurarScrollObserver(); 
-        actualizarBarraProgreso(); // Inicializa la barra en cero o en su progreso actual
+        actualizarBarraProgreso(); 
     }
     inicializarTarjetas();
 
