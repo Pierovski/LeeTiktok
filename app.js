@@ -225,13 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.speechSynthesis) return null;
         if (vocesDisponibles.length === 0) vocesDisponibles = window.speechSynthesis.getVoices();
         
-        // 1. Buscar primero acento latino neutro (Google, US, MX, 419)
+        // 1. Buscar primero acento latino neutro
         const vozLatina = vocesDisponibles.find(v => v.lang === 'es-US' || v.lang === 'es-MX' || v.lang === 'es-419' || v.lang === 'es-PE');
         if (vozLatina) return vozLatina;
         
-        // 2. Si no hay latina, conformarnos con cualquier español (ej. España)
+        // 2. Si no hay latina, conformarnos con cualquier español
         const vozEsp = vocesDisponibles.find(v => v.lang.startsWith('es'));
-        return vozEsp || vocesDisponibles[0]; // 3. Fallback extremo
+        return vozEsp || vocesDisponibles[0];
     }
 
     window.leerTextoSimple = function(texto, velocidad = 0.8) {
@@ -245,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const vozSeleccionada = obtenerMejorVoz();
             if (vozSeleccionada) {
                 utterance.voice = vozSeleccionada;
-                // LA CLAVE ESTÁ AQUÍ: Asignar el idioma exacto de la voz que encontró
                 utterance.lang = vozSeleccionada.lang; 
             }
             utterance.rate = velocidad; 
@@ -270,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const vozSeleccionada = obtenerMejorVoz();
                 if (vozSeleccionada) {
                     utterance.voice = vozSeleccionada;
-                    utterance.lang = vozSeleccionada.lang; // Evita el acento robótico extranjero
+                    utterance.lang = vozSeleccionada.lang; 
                 }
                 utterance.rate = velocidad; 
                 utterance.pitch = 1.1;
@@ -360,30 +359,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 registrarRachaPorLectura(); 
                 actualizarBarraProgreso(); 
                 lanzarConfeti(); 
+                audioVictoria.play(); 
                 
-                leerSilabaPromesa.then(() => {
-                    audioVictoria.play();
-                    const fraseCompleta = card.getAttribute('data-texto');
-                    
+                let btnContenedor = card.querySelector('.glass-content');
+                const fraseCompleta = btnContenedor.getAttribute('data-texto');
+
+                setTimeout(() => {
                     leerFraseConResaltado(fraseCompleta, card, 0.85).then(() => {
                         verificarSubidaDeNivel(card);
                     });
-                });
+                }, 600); 
 
-                // FIX: Transformación limpia del botón "Volver a escuchar"
-                let btnContenedor = card.querySelector('.glass-content');
+                // Mutación del botón
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
                 
                 if (oldBtn) {
-                    // Reemplazamos el HTML entero para matar eventos viejos
                     oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
                     
-                    // Seleccionamos el botón recién creado y le damos la orden exacta
                     let newBtn = btnContenedor.querySelector('.repetir-btn');
                     newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
-                        e.stopPropagation(); // Evita que otros clics interfieran
-                        const frase = card.getAttribute('data-texto');
+                        e.stopPropagation(); 
+                        const frase = btnContenedor.getAttribute('data-texto'); 
                         leerFraseConResaltado(frase, card, 0.85); 
                     });
                 }
@@ -402,28 +399,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     nivelActual++;
                     localStorage.setItem('miNivel', nivelActual);
                     alert(`¡FELICIDADES! 🎉\nDesbloqueaste el NIVEL ${nivelActual}.`);
-                    transicionSuaveNivel(); // LLAMADA SIN RECARGAR
+                    transicionSuaveNivel(); 
                 }, 1000); 
             }
         }
     }
 
     function transicionSuaveNivel() {
-        // Animación de salida
         feedContainer.classList.add('fade-out');
         
         setTimeout(() => {
-            // Limpiamos el HTML viejo
             feedContainer.innerHTML = '';
             
-            // Actualizamos la UI al nuevo nivel
             if (displayNivel) displayNivel.innerText = nivelActual;
             aplicarEstiloNivel(nivelActual);
             
-            // Cargamos nuevas tarjetas
             inicializarTarjetas();
             
-            // Retornamos el feed con transición suave
             feedContainer.scrollTo(0,0);
             feedContainer.classList.remove('fade-out');
             feedContainer.classList.add('fade-in');
@@ -432,14 +424,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedContainer.classList.remove('fade-in');
             }, 500);
 
-        }, 500); // Espera a que termine la animación de fade-out
+        }, 500); 
     }
 
     function inicializarTarjetas() {
         if (typeof frasesDatos === 'undefined') return;
         let datosFiltrados = frasesDatos.filter(item => item.nivel === nivelActual);
         
-        // Si ya no hay más niveles, evitamos error
         if (datosFiltrados.length === 0) {
             feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Juego Terminado!</h2><p>Eres un maestro. Nivel máximo alcanzado.</p></div></div>`;
             barraProgreso.style.width = '100%';
@@ -452,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarBarraProgreso(); 
     }
     
-    inicializarTarjetas(); // Primera carga
+    inicializarTarjetas(); 
 
     function crearTarjeta(item) {
         let textoBadge = 'Nivel ' + item.nivel;
@@ -496,22 +487,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cardContent = button.closest('.glass-content');
                 const textoFrase = cardContent.getAttribute('data-texto');
                 card.classList.add('completada'); 
-                // Agrega este bloque para que el botón mute a "Volver a escuchar"
-let btnContenedor = card.querySelector('.glass-content');
-let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
+                
+                let btnContenedor = card.querySelector('.glass-content');
+                let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
 
-if (oldBtn) {
-    oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
-    
-    let newBtn = btnContenedor.querySelector('.repetir-btn');
-    newBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        leerFraseConResaltado(textoFrase, card, 0.85); 
-    });
-}
+                if (oldBtn) {
+                    oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
+                    
+                    let newBtn = btnContenedor.querySelector('.repetir-btn');
+                    newBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        leerFraseConResaltado(textoFrase, card, 0.85); 
+                    });
+                }
 
-                // Marcar sílabas visualmente como leídas para que no queden grises
                 card.querySelectorAll('.no-leida').forEach(el => {
                     el.classList.remove('no-leida');
                     el.classList.add('leida');

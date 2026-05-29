@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lee-tiktok-v5.1-dev';
+const CACHE_NAME = 'lee-tiktok-v5.5-dev';
 
 self.addEventListener('install', (event) => {
     // Instala inmediatamente el nuevo Service Worker
