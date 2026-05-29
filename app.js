@@ -2,7 +2,6 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
-            // Revisa si hay código nuevo cada vez que ella minimiza y vuelve a abrir la app
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     reg.update();
@@ -11,7 +10,6 @@ if ('serviceWorker' in navigator) {
         }).catch(err => console.error('SW Error:', err));
     });
 
-    // Cuando detecta que el nuevo Service Worker tomó el control, recarga la app sola
     let refrescando = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refrescando) {
@@ -22,6 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- VARIABLES DEL DOM ---
     const feedContainer = document.getElementById('feed-container');
     const pointsDisplay = document.getElementById('points');
     const streakDisplay = document.getElementById('streak');
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUDIOS ---
     const audioBocina = new Audio('audios/bocina.mp3');
     const audioVictoria = new Audio('audios/victoria.mp3'); 
-    audioVictoria.volume = 0.5; // Baja el volumen a la mitad para que la voz resalte
+    audioVictoria.volume = 0.5;
     
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPop() {
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    // --- EFECTO VISUAL ---
     function lanzarConfeti() {
         for(let i=0; i<60; i++) {
             let confeti = document.createElement('div');
@@ -86,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function aplicarEstiloNivel(nivel) {
         const root = document.documentElement;
-        if (nivel === 2) { root.style.setProperty('--accent-purple', '#00e676'); root.style.setProperty('--accent-coral', '#18ffff'); } 
+        if (nivel === 1) { root.style.setProperty('--accent-purple', '#bb86fc'); root.style.setProperty('--accent-coral', '#ff7f50'); }
+        else if (nivel === 2) { root.style.setProperty('--accent-purple', '#00e676'); root.style.setProperty('--accent-coral', '#18ffff'); } 
         else if (nivel === 3) { root.style.setProperty('--accent-purple', '#ff9100'); root.style.setProperty('--accent-coral', '#ff1744'); } 
         else if (nivel >= 4) { root.style.setProperty('--accent-purple', '#d50000'); root.style.setProperty('--accent-coral', '#ffeb3b'); }
     }
@@ -147,10 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
             modificarEstrellas(-costo);
             if (nombre === 'Escudo') localStorage.setItem('tieneEscudo', 'true');
             alert(`¡Compraste: ${nombre}! Dile a Piero que te lo pague.`);
+            if (storePointsDisplay) storePointsDisplay.innerText = points;
         } else { alert("Faltan estrellas ⭐."); }
     };
 
-    // --- EL NUEVO BOTÓN HÍBRIDO ---
     function hacerBotonHibrido(boton, textoGuia, funcionClick) {
         let timerPresion;
         let esPresionLarga = false;
@@ -160,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             boton.classList.add('leyendo-guia');
             timerPresion = setTimeout(() => {
                 esPresionLarga = true;
-                leerTexto(textoGuia, 0.9);
+                leerTextoSimple(textoGuia, 0.9);
             }, 500); 
         };
 
@@ -186,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         boton.onmouseleave = cancelar;
     }
     
-    hacerBotonHibrido(btnHome, "Botón de Inicio.", () => { /* Trampas eliminadas */ });
+    hacerBotonHibrido(btnHome, "Botón de Inicio.", () => { feedContainer.scrollTo({top: 0, behavior: 'smooth'}); });
 
     hacerBotonHibrido(btnPremios, "Tienda de premios. Canjea tus estrellas aquí.", () => {
         if (storePointsDisplay) storePointsDisplay.innerText = points;
@@ -200,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnEmpezar) btnEmpezar.addEventListener('click', () => {
         onboarding.classList.add('oculto');
-        leerTexto(`Bienvenida al Nivel ${nivelActual}.`, 0.85); 
+        leerTextoSimple(`Bienvenida al Nivel ${nivelActual}.`, 0.85); 
     });
     
     if (btnCerrarTienda) btnCerrarTienda.addEventListener('click', () => {
@@ -212,9 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (hora >= 12 && hora < 19) greetingDisplay.innerText = "¡Buenas tardes! 🌆";
     else greetingDisplay.innerText = "¡Buenas noches! 🌙";
 
-    // --- MOTOR DE VOZ (CON ESCUDO ANTI-ATASCOS) ---
+       // --- MOTOR DE VOZ ---
     let vocesDisponibles = [];
-    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => vocesDisponibles = window.speechSynthesis.getVoices();
+    
+    // FIX ANTI-ANDROID BUG: Mantenemos referencias globales para evitar el Garbage Collection
+    window.utterances = []; 
+
+    if (window.speechSynthesis) {
+        vocesDisponibles = window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => vocesDisponibles = window.speechSynthesis.getVoices();
+    }
 
     function obtenerMejorVoz() {
         if (!window.speechSynthesis) return null;
@@ -224,17 +230,69 @@ document.addEventListener('DOMContentLoaded', () => {
         return voces.find(v => nombresFemeninos.some(n => v.name.toLowerCase().includes(n))) || voces[0];
     }
 
-    window.leerTexto = function(texto, velocidad = 0.8) {
+    // Lectura estándar sin resaltado
+    window.leerTextoSimple = function(texto, velocidad = 0.8) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel(); 
         
         setTimeout(() => { 
             const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+            window.utterances.push(utterance); // Protegemos en memoria
+
             utterance.voice = obtenerMejorVoz();
             utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
+            
+            utterance.onend = () => { window.utterances = window.utterances.filter(u => u !== utterance); };
+            utterance.onerror = () => { window.utterances = window.utterances.filter(u => u !== utterance); };
+
             window.speechSynthesis.speak(utterance);
         }, 50);
     };
+
+    // Función Asíncrona para leer con Resaltado y Cola de Promesas
+    function leerFraseConResaltado(texto, cardHtml, velocidad = 0.85) {
+        return new Promise((resolve) => {
+            if (!window.speechSynthesis) return resolve();
+            window.speechSynthesis.cancel();
+
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+                window.utterances.push(utterance); // Protegemos en memoria
+
+                utterance.voice = obtenerMejorVoz();
+                utterance.lang = 'es-PE'; 
+                utterance.rate = velocidad; 
+                utterance.pitch = 1.1;
+
+                // Lógica de resaltado visual dinámico
+                const spansPalabra = cardHtml.querySelectorAll('.palabra');
+                let indexActivo = 0;
+
+                utterance.onboundary = (event) => {
+                    if (event.name === 'word') {
+                        spansPalabra.forEach(s => s.classList.remove('word-highlight'));
+                        if (spansPalabra[indexActivo]) {
+                            spansPalabra[indexActivo].classList.add('word-highlight');
+                            indexActivo++;
+                        }
+                    }
+                };
+
+                utterance.onend = () => {
+                    spansPalabra.forEach(s => s.classList.remove('word-highlight'));
+                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    resolve(); 
+                };
+                
+                utterance.onerror = () => {
+                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    resolve();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }, 50);
+        });
+    }
 
     window.leerSilaba = function(elementoHtml, silaba) {
         playPop(); 
@@ -247,7 +305,31 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         let silabaAudio = diccionarioFonetico[silaba.toLowerCase()] || silaba;
-        leerTexto(silabaAudio + ".", 0.6); 
+        
+        // Creamos una promesa para la lectura de la sílaba
+        const leerSilabaPromesa = new Promise((resolve) => {
+            if (!window.speechSynthesis) return resolve();
+            window.speechSynthesis.cancel();
+            
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(silabaAudio + ".");
+                window.utterances.push(utterance); // Protegemos en memoria
+
+                utterance.voice = obtenerMejorVoz();
+                utterance.lang = 'es-PE'; utterance.rate = 0.6; utterance.pitch = 1.1;
+                
+                utterance.onend = () => {
+                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    resolve();
+                };
+                utterance.onerror = () => {
+                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    resolve();
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            }, 20);
+        });
         
         if (elementoHtml.classList.contains('no-leida')) {
             elementoHtml.classList.remove('no-leida');
@@ -263,15 +345,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 modificarEstrellas(5); 
                 registrarRachaPorLectura(); 
                 actualizarBarraProgreso(); 
-                
-                audioVictoria.play(); 
                 lanzarConfeti(); 
+                
+                // FLUJO ASÍNCRONO ORDENADO
+                leerSilabaPromesa.then(() => {
+                    audioVictoria.play();
+                    const fraseCompleta = card.getAttribute('data-texto');
+                    
+                    // Lee toda la frase e ilumina las palabras
+                    leerFraseConResaltado(fraseCompleta, card, 0.85).then(() => {
+                        verificarSubidaDeNivel(card);
+                    });
+                });
 
-                // FIX 1: LECTURA INMEDIATA DE LA FRASE (No esperar para evitar bloqueo)
-                const fraseCompleta = card.getAttribute('data-texto');
-                leerTexto(fraseCompleta, 0.85);
-
-                // FIX 2: CREAR BOTÓN DE REPETIR BLINDADO
+                // Transforma el botón de ayuda en botón de repetir
                 let btnContenedor = card.querySelector('.glass-content');
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
                 if(oldBtn) {
@@ -280,39 +367,78 @@ document.addEventListener('DOMContentLoaded', () => {
                     let newBtn = oldBtn.cloneNode(true);
                     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
                     
-                    // Asignación directa y blindada del evento clic
                     newBtn.onclick = function(e) {
                         e.preventDefault();
-                        leerTexto(fraseCompleta, 0.85); 
+                        const frase = card.getAttribute('data-texto');
+                        leerFraseConResaltado(frase, card, 0.85); 
                     };
-                }
-
-                let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
-                if (nivelDeEstaTarjeta === nivelActual) {
-                    let totalTarjetasDelNivel = document.querySelectorAll(`.card[data-nivel="${nivelActual}"]`);
-                    let completadas = document.querySelectorAll(`.card[data-nivel="${nivelActual}"].completada`);
-                    if (totalTarjetasDelNivel.length === completadas.length) {
-                        nivelActual++;
-                        localStorage.setItem('miNivel', nivelActual);
-                        setTimeout(() => {
-                            alert(`¡FELICIDADES! 🎉\nDesbloqueaste el NIVEL ${nivelActual}.`);
-                            location.reload(); 
-                        }, 3500); 
-                    }
                 }
             }
         }
     };
 
+    function verificarSubidaDeNivel(card) {
+        let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
+        if (nivelDeEstaTarjeta === nivelActual) {
+            let totalTarjetasDelNivel = document.querySelectorAll(`.card[data-nivel="${nivelActual}"]`);
+            let completadas = document.querySelectorAll(`.card[data-nivel="${nivelActual}"].completada`);
+            
+            if (totalTarjetasDelNivel.length === completadas.length) {
+                setTimeout(() => {
+                    nivelActual++;
+                    localStorage.setItem('miNivel', nivelActual);
+                    alert(`¡FELICIDADES! 🎉\nDesbloqueaste el NIVEL ${nivelActual}.`);
+                    transicionSuaveNivel(); // LLAMADA SIN RECARGAR
+                }, 1000); 
+            }
+        }
+    }
+
+    function transicionSuaveNivel() {
+        // Animación de salida
+        feedContainer.classList.add('fade-out');
+        
+        setTimeout(() => {
+            // Limpiamos el HTML viejo
+            feedContainer.innerHTML = '';
+            
+            // Actualizamos la UI al nuevo nivel
+            if (displayNivel) displayNivel.innerText = nivelActual;
+            aplicarEstiloNivel(nivelActual);
+            
+            // Cargamos nuevas tarjetas
+            inicializarTarjetas();
+            
+            // Retornamos el feed con transición suave
+            feedContainer.scrollTo(0,0);
+            feedContainer.classList.remove('fade-out');
+            feedContainer.classList.add('fade-in');
+            
+            setTimeout(() => {
+                feedContainer.classList.remove('fade-in');
+            }, 500);
+
+        }, 500); // Espera a que termine la animación de fade-out
+    }
+
     function inicializarTarjetas() {
         if (typeof frasesDatos === 'undefined') return;
         let datosFiltrados = frasesDatos.filter(item => item.nivel === nivelActual);
+        
+        // Si ya no hay más niveles, evitamos error
+        if (datosFiltrados.length === 0) {
+            feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Juego Terminado!</h2><p>Eres un maestro. Nivel máximo alcanzado.</p></div></div>`;
+            barraProgreso.style.width = '100%';
+            return;
+        }
+
         let datosMezclados = datosFiltrados.sort(() => Math.random() - 0.5);
         datosMezclados.forEach(item => crearTarjeta(item));
         activarBotonesVoz();
         actualizarBarraProgreso(); 
     }
-    inicializarTarjetas();
+    
+    inicializarTarjetas(); // Primera carga
 
     function crearTarjeta(item) {
         let textoBadge = 'Nivel ' + item.nivel;
@@ -352,12 +478,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 modificarEstrellas(-2); 
                 mostrarMeme('memes/error.jpg');
                 
+                const card = button.closest('.card');
                 const cardContent = button.closest('.glass-content');
                 const textoFrase = cardContent.getAttribute('data-texto');
-                button.closest('.card').classList.add('completada'); 
+                card.classList.add('completada'); 
+                
+                // Marcar sílabas visualmente como leídas para que no queden grises
+                card.querySelectorAll('.no-leida').forEach(el => {
+                    el.classList.remove('no-leida');
+                    el.classList.add('leida');
+                    el.style.color = 'var(--accent-coral)';
+                });
+
                 actualizarBarraProgreso();
 
-                audioBocina.onended = () => { leerTexto(textoFrase, 0.85); };
+                audioBocina.onended = () => { 
+                    leerFraseConResaltado(textoFrase, card, 0.85).then(() => {
+                        verificarSubidaDeNivel(card);
+                    }); 
+                };
             });
         });
     }

@@ -96,9 +96,13 @@ body {
     padding: 10px;
     scroll-behavior: smooth;
     scrollbar-width: none; 
+    transition: opacity 0.5s ease; /* Transición suave para niveles */
 }
 
 .feed::-webkit-scrollbar { display: none; }
+
+.feed.fade-out { opacity: 0; }
+.feed.fade-in { opacity: 1; }
 
 .card {
     height: calc(100vh - 170px);
@@ -133,11 +137,6 @@ body {
     margin-bottom: 20px;
 }
 
-.badge.humor {
-    background: rgba(255, 127, 80, 0.2);
-    color: var(--accent-coral);
-}
-
 /* --- Texto de Lectura y Sílabas --- */
 .reading-text {
     font-size: 2.2rem;
@@ -169,6 +168,22 @@ body {
 .espacio {
     display: inline-block;
     width: 10px;
+}
+
+/* --- NUEVO: Resaltado visual durante lectura final --- */
+.palabra {
+    display: inline-block;
+    transition: transform 0.2s ease, text-shadow 0.2s ease;
+}
+
+.word-highlight {
+    color: var(--accent-purple) !important;
+    transform: scale(1.1);
+    text-shadow: 0 0 15px var(--accent-purple);
+}
+
+.word-highlight .silaba {
+    color: var(--accent-purple) !important;
 }
 
 /* --- Botones de Acción de Tarjeta --- */
@@ -309,7 +324,6 @@ body {
     margin-bottom: 10px;
 }
 
-/* LA REGLA QUE ARREGLA LA FOTO DEL CREPE */
 .prize-img {
     width: 45px;
     height: 45px;
@@ -375,25 +389,6 @@ body {
     margin-top: 20px;
     cursor: pointer;
     box-shadow: 0 10px 20px rgba(187, 134, 252, 0.2);
-}
-
-/* --- Animaciones --- */
-@keyframes pulseGlow {
-    0% { box-shadow: 0 0 20px var(--accent-purple); transform: scale(0.99); }
-    50% { box-shadow: 0 0 35px var(--accent-coral); transform: scale(1.01); }
-    100% { box-shadow: 0 0 20px var(--accent-purple); transform: scale(0.99); }
-}
-
-.playing-active {
-    animation: pulseGlow 1.2s infinite;
-    border: 1px solid var(--accent-coral) !important;
-}
-
-.word-highlight {
-    color: var(--accent-coral);
-    text-shadow: 0 0 15px var(--accent-coral);
-    transform: scale(1.08);
-    display: inline-block;
 }
 
 .hidden { display: none !important; }
