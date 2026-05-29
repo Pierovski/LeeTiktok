@@ -1,9 +1,23 @@
-// --- REGISTRO DEL SERVICE WORKER (Requerido para instalar como App nativa) ---
+// --- REGISTRO DEL SERVICE WORKER Y ACTUALIZACIÓN AUTOMÁTICA ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('SW: Registrado correctamente', reg))
-            .catch(err => console.error('SW: Error al registrar el Service Worker', err));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            // Revisa si hay código nuevo cada vez que ella minimiza y vuelve a abrir la app
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    reg.update();
+                }
+            });
+        }).catch(err => console.error('SW Error:', err));
+    });
+
+    // Cuando detecta que el nuevo Service Worker tomó el control, recarga la app sola
+    let refrescando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refrescando) {
+            window.location.reload();
+            refrescando = true;
+        }
     });
 }
 
@@ -29,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUDIOS ---
     const audioBocina = new Audio('audios/bocina.mp3');
     const audioVictoria = new Audio('audios/victoria.mp3'); 
-    const audioGrillo = new Audio('audios/grillo.mp3');
+    audioVictoria.volume = 0.5; // Baja el volumen a la mitad para que la voz resalte
     
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPop() {
@@ -59,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- ECONOMÍA, RACHA ESTRICTA Y NIVEL ---
+    // --- ECONOMÍA Y NIVEL ---
     let points = parseInt(localStorage.getItem('misEstrellas')) || 20; 
     let streak = parseInt(localStorage.getItem('miRacha')) || 0;
     let nivelActual = parseInt(localStorage.getItem('miNivel')) || 1;
@@ -136,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else { alert("Faltan estrellas ⭐."); }
     };
 
-    // --- EL NUEVO BOTÓN HÍBRIDO (Clic normal vs Presión Larga) ---
+    // --- EL NUEVO BOTÓN HÍBRIDO ---
     function hacerBotonHibrido(boton, textoGuia, funcionClick) {
         let timerPresion;
         let esPresionLarga = false;
@@ -172,19 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
         boton.onmouseleave = cancelar;
     }
     
-    hacerBotonHibrido(btnHome, "Botón de Inicio. Te salva de las trampas.", () => {
-        resetearGrillo();
-        if (tarjetaActualEsTrampa) {
-            modificarEstrellas(5); audioVictoria.play(); lanzarConfeti(); tarjetaActualEsTrampa = false; 
-        }
-    });
+    hacerBotonHibrido(btnHome, "Botón de Inicio.", () => { /* Trampas eliminadas */ });
 
     hacerBotonHibrido(btnPremios, "Tienda de premios. Canjea tus estrellas aquí.", () => {
         if (storePointsDisplay) storePointsDisplay.innerText = points;
         storeModal.classList.remove('hidden'); setTimeout(() => storeModal.classList.add('active'), 10);
     });
 
-    hacerBotonHibrido(btnWsp, "Botón de WhatsApp. Envíale un mensaje a tu hermano.", () => {
+    btnWsp.addEventListener('click', () => {
         let mensaje = `¡Hola Piero! Soy Nivel ${nivelActual} en Lee TikTok. Tengo ${points} ⭐ estrellas. ¡Págame mis premios! 😎`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
@@ -203,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (hora >= 12 && hora < 19) greetingDisplay.innerText = "¡Buenas tardes! 🌆";
     else greetingDisplay.innerText = "¡Buenas noches! 🌙";
 
-    // --- MOTOR DE VOZ ---
+    // --- MOTOR DE VOZ (CON ESCUDO ANTI-ATASCOS) ---
     let vocesDisponibles = [];
     if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => vocesDisponibles = window.speechSynthesis.getVoices();
 
@@ -218,29 +227,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.leerTexto = function(texto, velocidad = 0.8) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
-        utterance.voice = obtenerMejorVoz();
-        utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
-        window.speechSynthesis.speak(utterance);
+        
+        setTimeout(() => { 
+            const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+            utterance.voice = obtenerMejorVoz();
+            utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
+            window.speechSynthesis.speak(utterance);
+        }, 50);
     };
 
-    let tarjetaActualEsTrampa = false;
-    let timeoutGrillo;
-    function resetearGrillo() {
-        clearTimeout(timeoutGrillo);
-        timeoutGrillo = setTimeout(() => { audioGrillo.play(); mostrarMeme('memes/trampa.jpg'); }, 15000); 
-    }
-
-    window.leerSilaba = function(elementoHtml, silaba, esTrampa) {
-        resetearGrillo(); 
-
-        if (esTrampa) {
-            audioBocina.play(); modificarEstrellas(-1); mostrarMeme('memes/error.jpg'); return;
-        }
-
+    window.leerSilaba = function(elementoHtml, silaba) {
         playPop(); 
 
-        // --- MEGA DICCIONARIO FONÉTICO (Calibrado para el español) ---
         const diccionarioFonetico = {
             "to": "tó", "te": "té", "se": "sé", "de": "dé", "tu": "tú", "mi": "mí", "si": "sí", "el": "él",
             "be": "bé", "ge": "jé", "que": "ké", "qui": "kí", "crush": "crash", "pov": "pof",
@@ -259,20 +257,21 @@ document.addEventListener('DOMContentLoaded', () => {
             let card = elementoHtml.closest('.card');
             let silabasFaltantes = card.querySelectorAll('.no-leida');
             
+            // --- SI COMPLETÓ LA FRASE ---
             if (silabasFaltantes.length === 0 && !card.classList.contains('completada')) {
                 card.classList.add('completada'); 
                 modificarEstrellas(5); 
                 registrarRachaPorLectura(); 
+                actualizarBarraProgreso(); 
                 
                 audioVictoria.play(); 
                 lanzarConfeti(); 
 
-                // LECTURA AUTOMÁTICA DE LA FRASE (Espera 1.5 seg para no chocar con el mp3)
+                // FIX 1: LECTURA INMEDIATA DE LA FRASE (No esperar para evitar bloqueo)
                 const fraseCompleta = card.getAttribute('data-texto');
-                setTimeout(() => {
-                    leerTexto(fraseCompleta, 0.85);
-                }, 1500);
+                leerTexto(fraseCompleta, 0.85);
 
+                // FIX 2: CREAR BOTÓN DE REPETIR BLINDADO
                 let btnContenedor = card.querySelector('.glass-content');
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
                 if(oldBtn) {
@@ -280,10 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     oldBtn.className = 'play-trigger repetir-btn'; 
                     let newBtn = oldBtn.cloneNode(true);
                     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-                    newBtn.addEventListener('click', (e) => {
+                    
+                    // Asignación directa y blindada del evento clic
+                    newBtn.onclick = function(e) {
                         e.preventDefault();
                         leerTexto(fraseCompleta, 0.85); 
-                    });
+                    };
                 }
 
                 let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
@@ -309,16 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let datosMezclados = datosFiltrados.sort(() => Math.random() - 0.5);
         datosMezclados.forEach(item => crearTarjeta(item));
         activarBotonesVoz();
-        configurarScrollObserver(); 
         actualizarBarraProgreso(); 
     }
     inicializarTarjetas();
 
     function crearTarjeta(item) {
-        let esTrampa = item.tipo === 'trampa';
-        let claseBadge = esTrampa ? 'badge humor' : 'badge';
-        let textoBadge = esTrampa ? 'OJO' : 'Nivel ' + item.nivel;
-        
+        let textoBadge = 'Nivel ' + item.nivel;
         let palabrasArray = item.texto.split(' ');
         let htmlProcesado = '';
 
@@ -326,16 +323,16 @@ document.addEventListener('DOMContentLoaded', () => {
             let silabasArray = palabra.split('-'); 
             htmlProcesado += `<span class="palabra">`;
             silabasArray.forEach((silaba, index) => {
-                htmlProcesado += `<span class="silaba no-leida" onclick="leerSilaba(this, '${silaba}', ${esTrampa})">${silaba}</span>`;
+                htmlProcesado += `<span class="silaba no-leida" onclick="leerSilaba(this, '${silaba}')">${silaba}</span>`;
                 if(index < silabasArray.length - 1) htmlProcesado += `<span class="guion">-</span>`;
             });
             htmlProcesado += `</span><span class="espacio"> </span>`;
         });
 
         const tarjetaHTML = `
-            <section class="card" data-trampa="${esTrampa}" data-nivel="${item.nivel}">
-                <div class="glass-content ${esTrampa ? 'trampa-activa' : ''}" data-texto="${item.texto}">
-                    <div class="${claseBadge}">${textoBadge}</div>
+            <section class="card" data-nivel="${item.nivel}">
+                <div class="glass-content" data-texto="${item.texto}">
+                    <div class="badge">${textoBadge}</div>
                     <p class="reading-text">${htmlProcesado}</p>
                     <button class="play-trigger full-phrase-btn" title="Manten presionado para escuchar qué hace este botón">
                         <div class="play-icon" style="font-size: 1.2rem;">${item.iconoBoton} Ayuda (-2 ⭐)</div>
@@ -349,8 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function activarBotonesVoz() {
         document.querySelectorAll('.full-phrase-btn').forEach(button => {
             hacerBotonHibrido(button, "Este es el botón de ayuda. Te resta 2 estrellas, pero te lee la frase completa.", (e) => {
-                resetearGrillo();
-                
                 if (points < 2) return alert("Faltan estrellas ⭐. ¡Toca las sílabas!");
                 
                 audioBocina.play();
@@ -365,18 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioBocina.onended = () => { leerTexto(textoFrase, 0.85); };
             });
         });
-    }
-
-    function configurarScrollObserver() {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    tarjetaActualEsTrampa = entry.target.getAttribute('data-trampa') === 'true';
-                    resetearGrillo(); 
-                }
-            });
-        }, { threshold: 0.6 }); 
-        document.querySelectorAll('.card').forEach(card => observer.observe(card));
     }
 
     function mostrarMeme(rutaImagen) {

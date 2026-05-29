@@ -1,5 +1,5 @@
 // sw.js - Service Worker para Modo Offline y PWA
-const CACHE_NAME = 'lee-tiktok-v2.1'; // Incrementado a V3
+const CACHE_NAME = 'lee-tiktok-v3'; // Incrementado a V3
 
 const ASSETS_TO_CACHE = [
     './',

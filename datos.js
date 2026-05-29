@@ -25,10 +25,6 @@ const frasesDatos = [
     { "id": 21, "texto": "no quie-ro ir", "tipo": "reto", "iconoBoton": "🙅‍♀️", "nivel": 2 },
     { "id": 22, "texto": "un pan con que-so", "tipo": "comida", "iconoBoton": "🥪", "nivel": 2 },
 
-    // --- TARJETAS TRAMPA (Mezcladas en niveles altos) ---
-    { "id": 23, "texto": "No le-as es-to to-ca la ca-sa", "tipo": "trampa", "iconoBoton": "🚨", "nivel": 2 },
-    { "id": 24, "texto": "To-ca el re-ga-lo no le-as", "tipo": "trampa", "iconoBoton": "🚨", "nivel": 3 },
-
     // --- NIVEL 3: Sílabas Trabadas (10 frases) ---
     { "id": 25, "texto": "gran pro-ble-ma", "tipo": "chisme", "iconoBoton": "😱", "nivel": 3 },
     { "id": 26, "texto": "fra-se de a-mor", "tipo": "amor", "iconoBoton": "💌", "nivel": 3 },

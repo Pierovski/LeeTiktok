@@ -18,14 +18,16 @@
     </div>
 
     <div class="app-container">
-        <header class="main-header">
+        <header class="main-header" style="position: relative;">
             <div class="status-bar">
                 <span class="user-greeting" id="greeting">¡Hola! ✨</span>
                 <div class="coin-display">
                     🔥 <span id="streak">0</span> &nbsp;|&nbsp; ⭐ <span id="points">0</span>
-                    <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
                 </div>
             </div>
+            
+            <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
+
             <div class="progress-container">
                 <div class="progress-bar" id="level-progress-bar"></div>
             </div>
@@ -54,7 +56,6 @@
                 <p style="color: var(--text-dim); margin-bottom: 15px;">Tienes: <strong style="color: white; font-size: 1.1rem;" id="store-points-display">0</strong></p>
                 
                 <div class="store-items-container">
-                    
                     <div class="store-item power-up" onclick="leerTexto('Escudo de racha. Cuesta 50 estrellas.')">
                         <span class="prize-icon">🛡️</span>
                         <span class="prize-name">Escudo de Racha</span>

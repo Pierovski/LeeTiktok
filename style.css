@@ -33,11 +33,12 @@ body {
 .main-header {
     padding: 20px;
     background: linear-gradient(to bottom, #000, transparent);
+    position: relative;
 }
 
 .status-bar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 15px;
 }
@@ -45,21 +46,47 @@ body {
 .user-greeting { 
     font-weight: 600; 
     font-size: 1.1rem; 
+    margin-right: 15px;
+}
+
+.coin-display {
+    font-size: 1rem;
 }
 
 .progress-container {
     background: rgba(255, 255, 255, 0.1);
     height: 6px;
     border-radius: 10px;
+    margin-top: 10px;
 }
 
 .progress-bar {
-    width: 25%;
+    width: 0%;
     height: 100%;
     background: linear-gradient(90deg, var(--accent-purple), var(--accent-coral));
     border-radius: 10px;
     box-shadow: 0 0 10px var(--accent-purple);
+    transition: width 0.5s ease-out;
 }
+
+/* --- Botón WhatsApp FIJO EN LA ESQUINA --- */
+.wsp-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+    z-index: 100;
+}
+
+.wsp-btn:active { transform: scale(0.9); }
 
 /* --- Feed de Tarjetas --- */
 .feed {
@@ -67,14 +94,14 @@ body {
     overflow-y: scroll;
     scroll-snap-type: y mandatory;
     padding: 10px;
+    scroll-behavior: smooth;
+    scrollbar-width: none; 
 }
 
-.feed::-webkit-scrollbar {
-    display: none; /* Oculta la barra en celulares */
-}
+.feed::-webkit-scrollbar { display: none; }
 
 .card {
-    height: calc(100vh - 160px);
+    height: calc(100vh - 170px);
     scroll-snap-align: start;
     display: flex;
     align-items: center;
@@ -144,7 +171,7 @@ body {
     width: 10px;
 }
 
-/* --- Botón de Lectura Completa (Fricción Activa) --- */
+/* --- Botones de Acción de Tarjeta --- */
 .full-phrase-btn {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
@@ -166,6 +193,40 @@ body {
     transform: scale(0.96); 
     background: rgba(255, 127, 80, 0.2);
     border-color: var(--accent-coral);
+}
+
+.repetir-btn {
+    background: rgba(0, 191, 255, 0.2);
+    color: white;
+    border: 1px solid #00bfff;
+    padding: 12px 25px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+    animation: aparecerSuave 0.5s ease;
+}
+
+.repetir-btn:active { transform: scale(0.9); }
+
+@keyframes aparecerSuave {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Accesibilidad: Voz Guía --- */
+.leyendo-guia {
+    animation: latidoGuia 0.8s infinite alternate !important;
+}
+
+@keyframes latidoGuia {
+    from { transform: scale(1); filter: brightness(1); }
+    to { transform: scale(1.1); filter: brightness(1.5); }
 }
 
 /* --- Navegación Inferior --- */
@@ -208,10 +269,7 @@ body {
     transition: opacity 0.2s ease;
 }
 
-.meme-modal.active {
-    opacity: 1;
-    pointer-events: all;
-}
+.meme-modal.active { opacity: 1; pointer-events: all; }
 
 .meme-content img {
     max-width: 85%;
@@ -238,9 +296,7 @@ body {
     text-align: center;
 }
 
-.store-items-container {
-    margin-top: 15px;
-}
+.store-items-container { margin-top: 15px; }
 
 .store-item {
     display: flex;
@@ -253,11 +309,19 @@ body {
     margin-bottom: 10px;
 }
 
+/* LA REGLA QUE ARREGLA LA FOTO DEL CREPE */
 .prize-img {
     width: 45px;
     height: 45px;
     object-fit: contain;
     border-radius: 8px;
+}
+
+.prize-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+    width: 45px;
+    text-align: center;
 }
 
 .prize-name {
@@ -280,6 +344,7 @@ body {
 }
 
 .buy-btn:active { transform: scale(0.9); }
+.power-up { background: rgba(187, 134, 252, 0.15) !important; border: 1px solid var(--accent-purple) !important; }
 
 /* --- Pantalla de Onboarding --- */
 .onboarding-overlay {
@@ -293,21 +358,11 @@ body {
     transition: opacity 0.4s ease, visibility 0.4s;
 }
 
-.onboarding-overlay.oculto {
-    opacity: 0;
-    visibility: hidden;
-}
+.onboarding-overlay.oculto { opacity: 0; visibility: hidden; }
 
-.onboarding-content {
-    text-align: center;
-    padding: 30px;
-}
+.onboarding-content { text-align: center; padding: 30px; }
 
-.onboarding-content h1 {
-    font-size: 2.6rem;
-    color: var(--accent-purple);
-    margin-bottom: 15px;
-}
+.onboarding-content h1 { font-size: 2.6rem; color: var(--accent-purple); margin-bottom: 15px; }
 
 .start-btn {
     background: linear-gradient(90deg, var(--accent-purple), var(--accent-coral));
@@ -322,7 +377,7 @@ body {
     box-shadow: 0 10px 20px rgba(187, 134, 252, 0.2);
 }
 
-/* --- Animaciones de Interacción --- */
+/* --- Animaciones --- */
 @keyframes pulseGlow {
     0% { box-shadow: 0 0 20px var(--accent-purple); transform: scale(0.99); }
     50% { box-shadow: 0 0 35px var(--accent-coral); transform: scale(1.01); }
@@ -342,51 +397,8 @@ body {
 }
 
 .hidden { display: none !important; }
-/* Agrega o reemplaza esto en tu style.css */
 
-.wsp-btn {
-    background: #25D366;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-left: 10px;
-}
-
-.wsp-btn:active {
-    transform: scale(0.9);
-}
-
-.prize-icon {
-    font-size: 2rem;
-    margin-right: 15px;
-    width: 45px;
-    text-align: center;
-}
-
-.power-up {
-    background: rgba(187, 134, 252, 0.15) !important;
-    border: 1px solid var(--accent-purple) !important;
-}
-
-/* Tarjeta Trampa */
-.trampa-activa {
-    border: 2px dashed var(--accent-coral) !important;
-    box-shadow: 0 0 30px rgba(255, 127, 80, 0.3) !important;
-}
-
-/* Efecto de deslizar (Scroll Falso) */
-.feed {
-    scroll-behavior: smooth;
-    scrollbar-width: none; /* Firefox */
-}
-.feed::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
-/* --- Confeti Matemático Ligero --- */
+/* --- Confeti Matemático --- */
 .confeti {
     position: fixed;
     top: -10px;
@@ -401,38 +413,4 @@ body {
 @keyframes caerConfeti {
     0% { transform: translateY(0) rotate(0deg); opacity: 1; }
     100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
-
-/* --- Botón Repetir (Aparece tras el éxito) --- */
-.repetir-btn {
-    background: rgba(0, 191, 255, 0.2);
-    color: white;
-    border: 1px solid #00bfff;
-    padding: 12px 25px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 0 auto;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s;
-    animation: aparecerSuave 0.5s ease;
-}
-
-.repetir-btn:active { transform: scale(0.9); }
-
-@keyframes aparecerSuave {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Efecto Voz Guía (Cuando mantiene presionado un botón) --- */
-.leyendo-guia {
-    animation: latidoGuia 0.8s infinite alternate !important;
-}
-@keyframes latidoGuia {
-    from { transform: scale(1); filter: brightness(1); }
-    to { transform: scale(1.1); filter: brightness(1.5); }
 }
