@@ -211,11 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (hora >= 12 && hora < 19) greetingDisplay.innerText = "¡Buenas tardes! 🌆";
     else greetingDisplay.innerText = "¡Buenas noches! 🌙";
 
-       // --- MOTOR DE VOZ ---
+       
+    // --- MOTOR DE VOZ ---
     let vocesDisponibles = [];
-    
-    // FIX ANTI-ANDROID BUG: Mantenemos referencias globales para evitar el Garbage Collection
-    window.utterances = []; 
+    window.utterances = []; // Protege contra el borrado de memoria de Android
 
     if (window.speechSynthesis) {
         vocesDisponibles = window.speechSynthesis.getVoices();
@@ -225,22 +224,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function obtenerMejorVoz() {
         if (!window.speechSynthesis) return null;
         if (vocesDisponibles.length === 0) vocesDisponibles = window.speechSynthesis.getVoices();
-        const voces = vocesDisponibles.filter(v => v.lang.startsWith('es'));
-        const nombresFemeninos = ['helena', 'sabina', 'paulina', 'zira', 'hilda', 'pilar', 'juana', 'google'];
-        return voces.find(v => nombresFemeninos.some(n => v.name.toLowerCase().includes(n))) || voces[0];
+        
+        // 1. Buscar primero acento latino neutro (Google, US, MX, 419)
+        const vozLatina = vocesDisponibles.find(v => v.lang === 'es-US' || v.lang === 'es-MX' || v.lang === 'es-419' || v.lang === 'es-PE');
+        if (vozLatina) return vozLatina;
+        
+        // 2. Si no hay latina, conformarnos con cualquier español (ej. España)
+        const vozEsp = vocesDisponibles.find(v => v.lang.startsWith('es'));
+        return vozEsp || vocesDisponibles[0]; // 3. Fallback extremo
     }
 
-    // Lectura estándar sin resaltado
     window.leerTextoSimple = function(texto, velocidad = 0.8) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel(); 
         
         setTimeout(() => { 
             const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
-            window.utterances.push(utterance); // Protegemos en memoria
+            window.utterances.push(utterance);
 
-            utterance.voice = obtenerMejorVoz();
-            utterance.lang = 'es-PE'; utterance.rate = velocidad; utterance.pitch = 1.1; 
+            const vozSeleccionada = obtenerMejorVoz();
+            if (vozSeleccionada) {
+                utterance.voice = vozSeleccionada;
+                // LA CLAVE ESTÁ AQUÍ: Asignar el idioma exacto de la voz que encontró
+                utterance.lang = vozSeleccionada.lang; 
+            }
+            utterance.rate = velocidad; 
+            utterance.pitch = 1.1; 
             
             utterance.onend = () => { window.utterances = window.utterances.filter(u => u !== utterance); };
             utterance.onerror = () => { window.utterances = window.utterances.filter(u => u !== utterance); };
@@ -249,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     };
 
-    // Función Asíncrona para leer con Resaltado y Cola de Promesas
     function leerFraseConResaltado(texto, cardHtml, velocidad = 0.85) {
         return new Promise((resolve) => {
             if (!window.speechSynthesis) return resolve();
@@ -257,14 +265,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
-                window.utterances.push(utterance); // Protegemos en memoria
+                window.utterances.push(utterance);
 
-                utterance.voice = obtenerMejorVoz();
-                utterance.lang = 'es-PE'; 
+                const vozSeleccionada = obtenerMejorVoz();
+                if (vozSeleccionada) {
+                    utterance.voice = vozSeleccionada;
+                    utterance.lang = vozSeleccionada.lang; // Evita el acento robótico extranjero
+                }
                 utterance.rate = velocidad; 
                 utterance.pitch = 1.1;
 
-                // Lógica de resaltado visual dinámico
                 const spansPalabra = cardHtml.querySelectorAll('.palabra');
                 let indexActivo = 0;
 
@@ -280,12 +290,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 utterance.onend = () => {
                     spansPalabra.forEach(s => s.classList.remove('word-highlight'));
-                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    window.utterances = window.utterances.filter(u => u !== utterance); 
                     resolve(); 
                 };
                 
                 utterance.onerror = () => {
-                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    window.utterances = window.utterances.filter(u => u !== utterance); 
                     resolve();
                 };
 
@@ -306,24 +316,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let silabaAudio = diccionarioFonetico[silaba.toLowerCase()] || silaba;
         
-        // Creamos una promesa para la lectura de la sílaba
         const leerSilabaPromesa = new Promise((resolve) => {
             if (!window.speechSynthesis) return resolve();
             window.speechSynthesis.cancel();
             
             setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(silabaAudio + ".");
-                window.utterances.push(utterance); // Protegemos en memoria
+                window.utterances.push(utterance);
 
-                utterance.voice = obtenerMejorVoz();
-                utterance.lang = 'es-PE'; utterance.rate = 0.6; utterance.pitch = 1.1;
+                const vozSeleccionada = obtenerMejorVoz();
+                if (vozSeleccionada) {
+                    utterance.voice = vozSeleccionada;
+                    utterance.lang = vozSeleccionada.lang;
+                }
+                utterance.rate = 0.6; 
+                utterance.pitch = 1.1;
                 
                 utterance.onend = () => {
-                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    window.utterances = window.utterances.filter(u => u !== utterance);
                     resolve();
                 };
                 utterance.onerror = () => {
-                    window.utterances = window.utterances.filter(u => u !== utterance); // Liberamos memoria
+                    window.utterances = window.utterances.filter(u => u !== utterance);
                     resolve();
                 };
                 
@@ -347,31 +361,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualizarBarraProgreso(); 
                 lanzarConfeti(); 
                 
-                // FLUJO ASÍNCRONO ORDENADO
                 leerSilabaPromesa.then(() => {
                     audioVictoria.play();
                     const fraseCompleta = card.getAttribute('data-texto');
                     
-                    // Lee toda la frase e ilumina las palabras
                     leerFraseConResaltado(fraseCompleta, card, 0.85).then(() => {
                         verificarSubidaDeNivel(card);
                     });
                 });
 
-                // Transforma el botón de ayuda en botón de repetir
+                // FIX: Transformación limpia del botón "Volver a escuchar"
                 let btnContenedor = card.querySelector('.glass-content');
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
-                if(oldBtn) {
-                    oldBtn.innerHTML = '<div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div>';
-                    oldBtn.className = 'play-trigger repetir-btn'; 
-                    let newBtn = oldBtn.cloneNode(true);
-                    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+                
+                if (oldBtn) {
+                    // Reemplazamos el HTML entero para matar eventos viejos
+                    oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
                     
-                    newBtn.onclick = function(e) {
+                    // Seleccionamos el botón recién creado y le damos la orden exacta
+                    let newBtn = btnContenedor.querySelector('.repetir-btn');
+                    newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
+                        e.stopPropagation(); // Evita que otros clics interfieran
                         const frase = card.getAttribute('data-texto');
                         leerFraseConResaltado(frase, card, 0.85); 
-                    };
+                    });
                 }
             }
         }
