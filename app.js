@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.cancel(); 
         
         setTimeout(() => { 
-            const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+            const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ''));
             window.utterances.push(utterance);
 
             const vozSeleccionada = obtenerMejorVoz();
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechSynthesis.cancel();
 
             setTimeout(() => {
-                const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ' '));
+                const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ''));
                 window.utterances.push(utterance);
 
                 const vozSeleccionada = obtenerMejorVoz();
@@ -496,7 +496,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cardContent = button.closest('.glass-content');
                 const textoFrase = cardContent.getAttribute('data-texto');
                 card.classList.add('completada'); 
-                
+                // Agrega este bloque para que el botón mute a "Volver a escuchar"
+let btnContenedor = card.querySelector('.glass-content');
+let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
+
+if (oldBtn) {
+    oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
+    
+    let newBtn = btnContenedor.querySelector('.repetir-btn');
+    newBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        leerFraseConResaltado(textoFrase, card, 0.85); 
+    });
+}
+
                 // Marcar sílabas visualmente como leídas para que no queden grises
                 card.querySelectorAll('.no-leida').forEach(el => {
                     el.classList.remove('no-leida');
