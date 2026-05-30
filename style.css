@@ -33,20 +33,28 @@ body {
 .main-header {
     padding: 20px;
     background: linear-gradient(to bottom, #000, transparent);
-    position: relative;
 }
 
-.status-bar {
+.header-top-row {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
+    gap: 15px; /* Espacio estricto entre elementos */
     margin-bottom: 15px;
 }
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1; /* Le dice al div que tome el espacio disponible */
+    min-width: 0; /* Evita que el texto empuje al botón fuera de la pantalla */
+}
+
 
 .user-greeting { 
     font-weight: 600; 
     font-size: 1.1rem; 
-    margin-right: 15px;
 }
 
 .coin-display {
@@ -69,11 +77,10 @@ body {
     transition: width 0.5s ease-out;
 }
 
-/* --- Botón WhatsApp FIJO EN LA ESQUINA --- */
+/* --- Botón WhatsApp AHORA FLUIDO Y BLINDADO --- */
 .wsp-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+    flex-shrink: 0; /* NO ME APLASTES */
+    white-space: nowrap; /* Mantiene el texto en una sola línea */
     background: #25D366;
     color: white;
     border: none;
@@ -83,7 +90,7 @@ body {
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
-    z-index: 100;
+    transition: transform 0.2s;
 }
 
 .wsp-btn:active { transform: scale(0.9); }
@@ -96,7 +103,7 @@ body {
     padding: 10px;
     scroll-behavior: smooth;
     scrollbar-width: none; 
-    transition: opacity 0.5s ease; /* Transición suave para niveles */
+    transition: opacity 0.5s ease;
 }
 
 .feed::-webkit-scrollbar { display: none; }
@@ -170,7 +177,6 @@ body {
     width: 10px;
 }
 
-/* --- NUEVO: Resaltado visual durante lectura final --- */
 .palabra {
     display: inline-block;
     transition: transform 0.2s ease, text-shadow 0.2s ease;
@@ -234,7 +240,6 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Accesibilidad: Voz Guía --- */
 .leyendo-guia {
     animation: latidoGuia 0.8s infinite alternate !important;
 }
@@ -268,7 +273,7 @@ body {
 .nav-btn.active { color: var(--accent-purple); }
 .nav-btn span { font-weight: 600; }
 
-/* --- Modales (Memes y Tienda) --- */
+/* --- Modales --- */
 .meme-modal {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -299,7 +304,6 @@ body {
     transform: scale(1) rotate(-3deg);
 }
 
-/* --- Estructura Interna de la Tienda --- */
 .store-content {
     background: var(--card-bg);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -360,7 +364,7 @@ body {
 .buy-btn:active { transform: scale(0.9); }
 .power-up { background: rgba(187, 134, 252, 0.15) !important; border: 1px solid var(--accent-purple) !important; }
 
-/* --- Pantalla de Onboarding --- */
+/* --- Onboarding --- */
 .onboarding-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -373,9 +377,7 @@ body {
 }
 
 .onboarding-overlay.oculto { opacity: 0; visibility: hidden; }
-
 .onboarding-content { text-align: center; padding: 30px; }
-
 .onboarding-content h1 { font-size: 2.6rem; color: var(--accent-purple); margin-bottom: 15px; }
 
 .start-btn {
@@ -393,7 +395,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* --- Confeti Matemático --- */
 .confeti {
     position: fixed;
     top: -10px;
