@@ -18,15 +18,16 @@
     </div>
 
     <div class="app-container">
-        <header class="main-header" style="position: relative;">
-            <div class="status-bar">
-                <span class="user-greeting" id="greeting">¡Hola! ✨</span>
-                <div class="coin-display">
-                    🔥 <span id="streak">0</span> &nbsp;|&nbsp; ⭐ <span id="points">0</span>
+        <header class="main-header">
+            <div class="header-top-row">
+                <div class="user-info">
+                    <span class="user-greeting" id="greeting">¡Hola! ✨</span>
+                    <div class="coin-display">
+                        🔥 <span id="streak">0</span> &nbsp;|&nbsp; ⭐ <span id="points">0</span>
+                    </div>
                 </div>
+                <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
             </div>
-            
-            <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
 
             <div class="progress-container">
                 <div class="progress-bar" id="level-progress-bar"></div>
@@ -41,6 +42,7 @@
 
         <nav class="bottom-nav">
             <button class="nav-btn active" id="btn-home">🏠<span>Inicio</span></button>
+            <button class="nav-btn" id="btn-jugar">🎮<span>Juego</span></button>
             <button class="nav-btn" id="btn-premios">🎁<span>Premios</span></button>
         </nav>
 
@@ -56,43 +58,43 @@
                 <p style="color: var(--text-dim); margin-bottom: 15px;">Tienes: <strong style="color: white; font-size: 1.1rem;" id="store-points-display">0</strong></p>
                 
                 <div class="store-items-container">
-                    <div class="store-item power-up" onclick="leerTexto('Escudo de racha. Cuesta 50 estrellas.')">
+                    <div class="store-item power-up" onclick="leerTextoSimple('Escudo de racha. Cuesta 50 estrellas.')">
                         <span class="prize-icon">🛡️</span>
                         <span class="prize-name">Escudo de Racha</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(50, 'Escudo', 1)">⭐ 50</button>
                     </div>
 
-                    <div class="store-item" onclick="leerTexto('Helado. Cuesta 50 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Helado. Cuesta 50 estrellas.')">
                         <img src="premios/helado.png" alt="Helado" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Helado</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(50, 'Helado', 1)">⭐ 50</button>
                     </div>
                     
-                    <div class="store-item" onclick="leerTexto('Crepe dulce. Cuesta 100 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Crepe dulce. Cuesta 100 estrellas.')">
                         <img src="premios/crepe.png" alt="Crepe" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Crepe dulce</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(100, 'Crepe', 1)">⭐ 100</button>
                     </div>
                     
-                    <div class="store-item" onclick="leerTexto('Tacos mexicanos. Cuesta 150 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Tacos mexicanos. Cuesta 150 estrellas.')">
                         <img src="premios/tacos.png" alt="Tacos" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Tacos (Nivel 2+)</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(150, 'Tacos', 2)">⭐ 150</button>
                     </div>
                     
-                    <div class="store-item" onclick="leerTexto('Reloj Inteligente. Cuesta 300 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Reloj Inteligente. Cuesta 300 estrellas.')">
                         <img src="premios/reloj.png" alt="Reloj" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Reloj Smart (Nivel 3+)</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(300, 'Reloj', 3)">⭐ 300</button>
                     </div>
                     
-                    <div class="store-item" onclick="leerTexto('Zapatillas. Cuesta 500 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Zapatillas. Cuesta 500 estrellas.')">
                         <img src="premios/zapatilla.png" alt="Zapatillas" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Zapatillas (Nivel 4+)</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(500, 'Zapatillas', 4)">⭐ 500</button>
                     </div>
                     
-                    <div class="store-item" onclick="leerTexto('Celular nuevo. Cuesta 1000 estrellas.')">
+                    <div class="store-item" onclick="leerTextoSimple('Celular nuevo. Cuesta 1000 estrellas.')">
                         <img src="premios/celular.png" alt="Celular" class="prize-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHJlY3Qgd2lkdGg9IjQ1IiBoZWlnaHQ9IjQ1IiBmaWxsPSIjMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkluZy48L3RleHQ+PC9zdmc+'">
                         <span class="prize-name">Celular (Nivel 4+)</span>
                         <button class="buy-btn" onclick="event.stopPropagation(); comprarPremio(1000, 'Celular', 4)">⭐ 1000</button>
@@ -100,6 +102,23 @@
                 </div>
                 
                 <button id="btn-cerrar-tienda" class="start-btn" style="margin-top: 25px; font-size: 1rem; padding: 10px 30px; width: auto;">Volver</button>
+            </div>
+        </div>
+
+        <div id="minijuego-modal" class="meme-modal hidden" style="z-index: 3000; background: rgba(10, 10, 12, 0.95);">
+            <div class="swipe-container" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <h2 style="color: var(--accent-purple); margin-bottom: 20px; text-align: center;">¿Existe esta palabra?</h2>
+                
+                <div id="tarjeta-swipe" class="swipe-card">
+                    <span id="palabra-swipe">Zanahoria</span>
+                </div>
+                
+                <div class="swipe-instructions">
+                    <span style="color: #ff1744;">⬅️ Falsa</span>
+                    <span style="color: #00e676;">Real ➡️</span>
+                </div>
+                
+                <button id="btn-cerrar-minijuego" class="start-btn" style="margin-top: 40px; font-size: 1rem; padding: 10px 30px;">Salir del juego</button>
             </div>
         </div>
     </div>

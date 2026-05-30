@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    }
+    } // <-- AQUÍ DEBÍA CERRAR LA FUNCIÓN DEL AUDIO
 
     function lanzarConfeti() {
         for(let i=0; i<60; i++) {
@@ -525,5 +525,166 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => memeModal.classList.add('active'), 50);
             setTimeout(() => { memeModal.classList.remove('active'); setTimeout(() => memeModal.classList.add('hidden'), 300); }, 1800);
         }
+    }
+
+          // --- LÓGICA DEL MINIJUEGO SWIPE ---
+    const minijuegoModal = document.getElementById('minijuego-modal');
+    const tarjetaSwipe = document.getElementById('tarjeta-swipe');
+    const palabraSwipe = document.getElementById('palabra-swipe');
+    const btnCerrarMinijuego = document.getElementById('btn-cerrar-minijuego');
+    const btnJugar = document.getElementById('btn-jugar');
+
+    // 1. BASE DE DATOS DEL MINIJUEGO (Enfoque en Lectura, no ortografía)
+    const diccionarioSwipe = [
+        // Nivel 1: Sílabas simples directas (M, P, S, L, T, D)
+        { palabra: "Mamá", correcta: true, nivel: 1 },
+        { palabra: "Mepa", correcta: false, nivel: 1 },
+        { palabra: "Papá", correcta: true, nivel: 1 },
+        { palabra: "Pupo", correcta: false, nivel: 1 },
+        { palabra: "Pato", correcta: true, nivel: 1 },
+        { palabra: "Tepo", correcta: false, nivel: 1 },
+        { palabra: "Mesa", correcta: true, nivel: 1 },
+        { palabra: "Mesu", correcta: false, nivel: 1 },
+        { palabra: "Sapo", correcta: true, nivel: 1 },
+        { palabra: "Sopu", correcta: false, nivel: 1 },
+        { palabra: "Luna", correcta: true, nivel: 1 },
+        { palabra: "Linu", correcta: false, nivel: 1 },
+        { palabra: "Dado", correcta: true, nivel: 1 },
+        { palabra: "Dudo", correcta: true, nivel: 1 }, // Trampa real
+        { palabra: "Dapu", correcta: false, nivel: 1 },
+
+        // Nivel 2: 2 a 3 sílabas comunes y sonidos un poco más fuertes
+        { palabra: "Gato", correcta: true, nivel: 2 },
+        { palabra: "Guti", correcta: false, nivel: 2 },
+        { palabra: "Perro", correcta: true, nivel: 2 },
+        { palabra: "Purro", correcta: false, nivel: 2 },
+        { palabra: "Pelota", correcta: true, nivel: 2 },
+        { palabra: "Peluto", correcta: false, nivel: 2 },
+        { palabra: "Jugo", correcta: true, nivel: 2 },
+        { palabra: "Jago", correcta: false, nivel: 2 },
+
+        // Nivel 3: Palabras de su entorno, combinaciones y 3+ sílabas
+        { palabra: "Celular", correcta: true, nivel: 3 },
+        { palabra: "Cilular", correcta: false, nivel: 3 },
+        { palabra: "Ceviche", correcta: true, nivel: 3 },
+        { palabra: "Cevocho", correcta: false, nivel: 3 },
+        { palabra: "Helado", correcta: true, nivel: 3 },
+        { palabra: "Holado", correcta: false, nivel: 3 },
+        { palabra: "Zapatilla", correcta: true, nivel: 3 },
+        { palabra: "Zapotilla", correcta: false, nivel: 3 },
+
+        // Nivel 4: Redes y su día a día (Lectura global rápida)
+        { palabra: "Tiktok", correcta: true, nivel: 4 },
+        { palabra: "Tiktek", correcta: false, nivel: 4 },
+        { palabra: "Yape", correcta: true, nivel: 4 },
+        { palabra: "Yepa", correcta: false, nivel: 4 },
+        { palabra: "Crush", correcta: true, nivel: 4 },
+        { palabra: "Crosh", correcta: false, nivel: 4 }
+    ];
+
+    let palabraActualJuego = null;
+
+    function cargarNuevaPalabra() {
+        // Filtramos palabras que correspondan al nivel actual o inferiores
+        let palabrasDisponibles = diccionarioSwipe.filter(p => p.nivel <= nivelActual);
+        
+        // Seguro por si no hay palabras
+        if (palabrasDisponibles.length === 0) palabrasDisponibles = diccionarioSwipe; 
+        
+        // Seleccionamos una al azar
+        palabraActualJuego = palabrasDisponibles[Math.floor(Math.random() * palabrasDisponibles.length)];
+        palabraSwipe.innerText = palabraActualJuego.palabra;
+    }
+
+    if (minijuegoModal && tarjetaSwipe) {
+        let toqueInicialX = 0;
+        let toqueActualX = 0;
+
+        tarjetaSwipe.addEventListener('touchstart', (e) => {
+            toqueInicialX = e.changedTouches[0].screenX;
+            tarjetaSwipe.style.transition = 'none'; 
+        });
+
+        tarjetaSwipe.addEventListener('touchmove', (e) => {
+            toqueActualX = e.changedTouches[0].screenX;
+            let diferenciaX = toqueActualX - toqueInicialX;
+            let rotacion = diferenciaX * 0.08; 
+            tarjetaSwipe.style.transform = `translate3d(${diferenciaX}px, 0, 0) rotate(${rotacion}deg)`;
+        });
+
+        tarjetaSwipe.addEventListener('touchend', (e) => {
+            let toqueFinalX = e.changedTouches[0].screenX;
+            let diferenciaX = toqueFinalX - toqueInicialX;
+            tarjetaSwipe.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; 
+
+            if (diferenciaX > 100) {
+                // Derecha
+                tarjetaSwipe.style.transform = `translate3d(500px, 0, 0) rotate(30deg)`;
+                tarjetaSwipe.style.opacity = '0';
+                evaluarPalabra(true);
+            } else if (diferenciaX < -100) {
+                // Izquierda
+                tarjetaSwipe.style.transform = `translate3d(-500px, 0, 0) rotate(-30deg)`;
+                tarjetaSwipe.style.opacity = '0';
+                evaluarPalabra(false);
+            } else {
+                tarjetaSwipe.style.transform = `translate3d(0px, 0, 0) rotate(0deg)`;
+            }
+        });
+
+                        function evaluarPalabra(esDerecha) {
+            let acerto = (esDerecha === palabraActualJuego.correcta);
+
+            if (acerto) {
+                playPop(); 
+                modificarEstrellas(1); 
+                lanzarConfeti(); // ¡Aquí activamos tu función de papel picado!
+            } else {
+                // Creamos un audio independiente temporal para no "despertar" el botón de ayuda del fondo
+                let audioErrorJuego = new Audio('audios/bocina.mp3');
+                audioErrorJuego.play(); 
+                
+                // Disparamos el feedback visual de la pantalla y la tarjeta
+                tarjetaSwipe.classList.add('error-shake');
+                minijuegoModal.classList.add('flash-rojo');
+                
+                // Hacemos que el celular vibre
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50, 50]); 
+            }
+
+            // Esperamos 400ms a que pase el efecto o la animación para limpiar todo
+            setTimeout(() => {
+                tarjetaSwipe.style.transition = 'none';
+                tarjetaSwipe.style.transform = `translate3d(0px, 0, 0) rotate(0deg)`; 
+                tarjetaSwipe.style.opacity = '1';
+                
+                // Limpiamos las clases de error para la próxima jugada
+                tarjetaSwipe.classList.remove('error-shake');
+                minijuegoModal.classList.remove('flash-rojo');
+                
+                cargarNuevaPalabra(); 
+            }, 400);
+        }
+
+
+        if (btnCerrarMinijuego) {
+            btnCerrarMinijuego.addEventListener('click', () => {
+                minijuegoModal.classList.remove('active');
+                setTimeout(() => minijuegoModal.classList.add('hidden'), 300);
+            });
+        }
+    }
+
+   // --- BOTÓN PARA ABRIR EL MINIJUEGO CON INSTRUCCIONES ---
+    if (btnJugar && minijuegoModal) {
+        btnJugar.addEventListener('click', () => {
+            minijuegoModal.classList.remove('hidden');
+            setTimeout(() => minijuegoModal.classList.add('active'), 10);
+            
+            cargarNuevaPalabra(); 
+
+            // Instrucción por voz corregida para el nuevo objetivo
+            leerTextoSimple("Desliza a la derecha si es una palabra real, o a la izquierda si es una palabra inventada.", 0.9);
+        });
     }
 });

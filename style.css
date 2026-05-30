@@ -410,3 +410,56 @@ body {
     0% { transform: translateY(0) rotate(0deg); opacity: 1; }
     100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
+/* --- MINIJUEGO SWIPE --- */
+.swipe-card {
+    background: var(--card-bg);
+    border: 2px solid var(--accent-purple);
+    border-radius: 20px;
+    width: 260px;
+    height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    user-select: none;
+    touch-action: none; /* Bloquea el scroll nativo del celular */
+    cursor: grab;
+}
+
+.swipe-card:active {
+    cursor: grabbing;
+}
+
+.swipe-instructions {
+    display: flex;
+    justify-content: space-between;
+    width: 260px;
+    margin-top: 25px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+/* --- FEEDBACK VISUAL DE ERROR --- */
+@keyframes vibrarError {
+    0% { transform: translate3d(0, 0, 0); }
+    20% { transform: translate3d(-12px, 0, 0) rotate(-3deg); }
+    40% { transform: translate3d(12px, 0, 0) rotate(3deg); }
+    60% { transform: translate3d(-12px, 0, 0) rotate(-3deg); }
+    80% { transform: translate3d(12px, 0, 0) rotate(3deg); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+
+.error-shake {
+    animation: vibrarError 0.4s ease-in-out !important;
+    border-color: #ff1744 !important;
+    box-shadow: 0 0 30px rgba(255, 23, 68, 0.6) !important;
+}
+
+.flash-rojo {
+    background: rgba(255, 23, 68, 0.25) !important;
+    transition: background 0.1s ease;
+}
