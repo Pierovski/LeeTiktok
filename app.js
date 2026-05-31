@@ -212,15 +212,13 @@ document.addEventListener('DOMContentLoaded', () => {
         storeModal.classList.remove('active'); setTimeout(() => storeModal.classList.add('hidden'), 300);
     });
 
-    // --- LÓGICA DEL MODAL DE SUBIDA DE NIVEL ---
+    // --- LÓGICA DEL MODAL DE SUBIDA DE NIVEL Y EXAMEN ---
     if (btnSiNivel) {
         btnSiNivel.addEventListener('click', () => {
             modalNivel.classList.remove('active');
             setTimeout(() => {
                 modalNivel.classList.add('hidden');
-                nivelActual++;
-                localStorage.setItem('miNivel', nivelActual);
-                transicionSuaveNivel();
+                iniciarExamenNivel(); // En lugar de subir de frente, exigimos el examen
             }, 300);
         });
     }
@@ -231,30 +229,26 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 modalNivel.classList.add('hidden');
                 
-                // Si dice que NO, le inyectamos una tarjeta dorada al final para que pueda subir después
+                // Si dice que NO, le inyectamos una tarjeta dorada al final para que pueda dar su examen después
                 if (!document.getElementById('tarjeta-pase-nivel')) {
                     const tarjetaPase = `
                         <section class="card" id="tarjeta-pase-nivel">
                             <div class="glass-content" style="border: 2px solid var(--accent-coral);">
                                 <h2 style="font-size: 1.8rem; margin-bottom: 10px;">¡Nivel ${nivelActual} Dominado! 🏆</h2>
-                                <p style="color: var(--text-dim); margin: 15px 0;">Cuando sientas que estás lista, avanza al siguiente reto.</p>
-                                <button class="start-btn" id="btn-pase-manual" style="width: 100%; margin: 0;">Pasar al Nivel ${nivelActual + 1} ➡️</button>
+                                <p style="color: var(--text-dim); margin: 15px 0;">Cuando sientas que estás lista, aprueba el examen final para avanzar.</p>
+                                <button class="start-btn" id="btn-pase-manual" style="width: 100%; margin: 0;">Dar Examen de Nivel 📝</button>
                             </div>
                         </section>
                     `;
-                    // Usamos insertAdjacentHTML para no destruir los eventos de las tarjetas anteriores
                     feedContainer.insertAdjacentHTML('beforeend', tarjetaPase);
                     
                     setTimeout(() => {
                         const btnPaseManual = document.getElementById('btn-pase-manual');
                         if (btnPaseManual) {
                             btnPaseManual.addEventListener('click', () => {
-                                nivelActual++;
-                                localStorage.setItem('miNivel', nivelActual);
-                                transicionSuaveNivel();
+                                iniciarExamenNivel();
                             });
                         }
-                        // Hacemos scroll hasta el nuevo botón
                         btnPaseManual.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 100);
                 }
@@ -440,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- NUEVA LÓGICA DE CONTROL PARA SUBIR DE NIVEL ---
     function verificarSubidaDeNivel(card) {
         let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
         if (nivelDeEstaTarjeta === nivelActual) {
@@ -448,14 +441,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let completadas = document.querySelectorAll(`.card[data-nivel="${nivelActual}"].completada`);
             
             if (totalTarjetasDelNivel.length === completadas.length) {
-                // Seguro: no lanzamos el modal si ya generó el botón manual al final
+                // Si ya generó la tarjeta dorada de pase manual, no abrimos el modal de nuevo
                 if (document.getElementById('tarjeta-pase-nivel')) return;
 
                 setTimeout(() => {
                     if (modalNivel) {
                         modalNivel.classList.remove('hidden');
                         setTimeout(() => modalNivel.classList.add('active'), 10);
-                        playPop(); // Un sonido alegre para el logro
+                        playPop(); // Un sonido alegre para celebrar que terminó las tarjetas
                     }
                 }, 800); 
             }
@@ -481,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let datosFiltrados = frasesDatos.filter(item => item.nivel === nivelActual);
         
         if (datosFiltrados.length === 0) {
-            feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Juego Terminado!</h2><p>Eres un maestro. Nivel máximo alcanzado.</p></div></div>`;
+            feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Juego Terminado!</h2><p>Eres una maestra. Nivel máximo alcanzado.</p></div></div>`;
             barraProgreso.style.width = '100%';
             return;
         }
@@ -575,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- BASE DE DATOS GLOBAL (Usada por ambos minijuegos) ---
+    // --- BASE DE DATOS GLOBAL (Usada por ambos minijuegos y el examen) ---
     const diccionarioJuegos = [
         { palabra: "Mamá", correcta: true, nivel: 1, icono: "👩‍👧" },
         { palabra: "Mepa", correcta: false, nivel: 1 },
@@ -708,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DEL MINIJUEGO DE ESCRITURA ---
+    // --- LÓGICA DEL MINIJUEGO DE ESCRITURA Y MODO EXAMEN ---
     const modalEscritura = document.getElementById('minijuego-escritura');
     const btnEscribir = document.getElementById('btn-escribir');
     const btnCerrarEscritura = document.getElementById('btn-cerrar-escritura');
@@ -719,17 +712,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const tarjetaEscritura = document.getElementById('tarjeta-escritura');
 
     let palabraObjetivo = "";
+    let modoExamen = false;
+    let examenPalabras = [];
+    let examenIndice = 0;
+
+    // Función que dispara el examen para pasar de nivel
+    window.iniciarExamenNivel = function() {
+        let palabrasValidas = diccionarioJuegos.filter(p => p.nivel === nivelActual && p.correcta === true && p.icono);
+        if (palabrasValidas.length === 0) palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
+        
+        palabrasValidas = palabrasValidas.sort(() => Math.random() - 0.5);
+        examenPalabras = palabrasValidas.slice(0, 3); // Le exigimos 3 palabras correctas seguidas
+        examenIndice = 0;
+        modoExamen = true;
+
+        if (modalEscritura) {
+            modalEscritura.classList.remove('hidden');
+            setTimeout(() => modalEscritura.classList.add('active'), 10);
+            cargarPalabraEscrituraExamen();
+            leerTextoSimple(`Examen final. Escribe las tres palabras correctamente para pasar de nivel.`, 0.9);
+        }
+    };
+
+    function cargarPalabraEscrituraExamen() {
+        let seleccion = examenPalabras[examenIndice];
+        palabraObjetivo = seleccion.palabra;
+        if(imagenLeer) imagenLeer.innerText = seleccion.icono; 
+        
+        if(inputEscritura) {
+            inputEscritura.value = ""; 
+            inputEscritura.focus();
+        }
+        
+        const tituloModal = document.querySelector('#minijuego-escritura h2');
+        if(tituloModal) tituloModal.innerText = `Examen Nivel ${nivelActual} 📝 (${examenIndice + 1}/${examenPalabras.length})`;
+    }
 
     function cargarPalabraEscritura() {
+        modoExamen = false;
+        const tituloModal = document.querySelector('#minijuego-escritura h2');
+        if(tituloModal) tituloModal.innerText = "¿Qué ves aquí?";
+
         let palabrasValidas = diccionarioJuegos.filter(p => p.nivel <= nivelActual && p.correcta === true && p.icono);
         if (palabrasValidas.length === 0) palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
         
         let seleccion = palabrasValidas[Math.floor(Math.random() * palabrasValidas.length)];
         palabraObjetivo = seleccion.palabra;
-        imagenLeer.innerText = seleccion.icono; 
+        if(imagenLeer) imagenLeer.innerText = seleccion.icono; 
         
-        inputEscritura.value = ""; 
-        inputEscritura.focus();
+        if(inputEscritura) {
+            inputEscritura.value = ""; 
+            inputEscritura.focus();
+        }
     }
 
     if (btnEscribir && modalEscritura) {
@@ -741,6 +775,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         btnCerrarEscritura.addEventListener('click', () => {
+            if (modoExamen) {
+                alert("Has cancelado el examen. Puedes intentarlo luego usando la tarjeta dorada al final de la lista.");
+                modoExamen = false;
+            }
             modalEscritura.classList.remove('active');
             setTimeout(() => modalEscritura.classList.add('hidden'), 300);
         });
@@ -765,7 +803,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 setTimeout(() => {
                     inputEscritura.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
-                    cargarPalabraEscritura();
+                    
+                    if (modoExamen) {
+                        examenIndice++;
+                        if (examenIndice < examenPalabras.length) {
+                            cargarPalabraEscrituraExamen();
+                        } else {
+                            // ¡Pasó el examen final de 3 palabras!
+                            modoExamen = false;
+                            modalEscritura.classList.remove('active');
+                            setTimeout(() => {
+                                modalEscritura.classList.add('hidden');
+                                nivelActual++;
+                                localStorage.setItem('miNivel', nivelActual);
+                                alert(`¡EXAMEN APROBADO! 🎉\nDemostraste que ya dominas estas palabras. ¡Bienvenida al Nivel ${nivelActual}!`);
+                                transicionSuaveNivel();
+                            }, 300);
+                        }
+                    } else {
+                        cargarPalabraEscritura();
+                    }
                 }, 800);
             } else {
                 let audioErrorEscribir = new Audio('audios/bocina.mp3');
