@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const storePointsDisplay = document.getElementById('store-points-display');
     const barraProgreso = document.getElementById('level-progress-bar');
 
+    // Modal de Nivel
+    const modalNivel = document.getElementById('modal-nivel');
+    const btnSiNivel = document.getElementById('btn-si-nivel');
+    const btnNoNivel = document.getElementById('btn-no-nivel');
+
     // --- AUDIOS ---
     const audioBocina = new Audio('audios/bocina.mp3');
     const audioVictoria = new Audio('audios/victoria.mp3'); 
@@ -56,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
         osc.connect(gainNode); gainNode.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    } // <-- AQUÍ DEBÍA CERRAR LA FUNCIÓN DEL AUDIO
+    }
 
     function lanzarConfeti() {
         for(let i=0; i<60; i++) {
@@ -98,18 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let porcentaje = totalTarjetas === 0 ? 0 : (completadas / totalTarjetas) * 100;
         barraProgreso.style.width = porcentaje + '%';
     }
-
-    let toquesReset = 0, timerReset;
-    greetingDisplay.addEventListener('click', () => {
-        toquesReset++; clearTimeout(timerReset);
-        timerReset = setTimeout(() => { toquesReset = 0; }, 2000); 
-        if (toquesReset >= 5) {
-            if (confirm("⚠️ MODO DESARROLLADOR: ¿Volver al Nivel 1 y borrar progreso?")) {
-                localStorage.clear(); location.reload();
-            }
-            toquesReset = 0;
-        }
-    });
 
     function modificarEstrellas(cantidad) {
         points += cantidad;
@@ -174,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!esPresionLarga) funcionClick(e);
             if(e.cancelable) e.preventDefault(); 
         };
-        
         boton.onmousedown = (e) => { if(e.pointerType !== 'touch') iniciar(); };
         boton.onmouseup = (e) => { 
             if(e.pointerType !== 'touch') {
@@ -186,8 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     hacerBotonHibrido(btnHome, "Botón de Inicio.", () => { feedContainer.scrollTo({top: 0, behavior: 'smooth'}); });
-
-    hacerBotonHibrido(btnPremios, "Tienda de premios. Canjea tus estrellas aquí.", () => {
+    hacerBotonHibrido(btnPremios, "Tienda de premios.", () => {
         if (storePointsDisplay) storePointsDisplay.innerText = points;
         storeModal.classList.remove('hidden'); setTimeout(() => storeModal.classList.add('active'), 10);
     });
@@ -197,24 +188,83 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
     });
 
-    if (btnEmpezar) btnEmpezar.addEventListener('click', () => {
-        onboarding.classList.add('oculto');
-        leerTextoSimple(`Bienvenida al Nivel ${nivelActual}.`, 0.85); 
-    });
+    if (localStorage.getItem('onboardingVisto') === 'true') {
+        onboarding.style.display = 'none';
+    }
+
+    if (btnEmpezar) {
+        btnEmpezar.addEventListener('click', () => {
+            let vozMuda = new SpeechSynthesisUtterance('');
+            vozMuda.volume = 0;
+            window.speechSynthesis.speak(vozMuda);
+
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            onboarding.classList.add('oculto');
+            localStorage.setItem('onboardingVisto', 'true'); 
+            
+            setTimeout(() => { leerTextoSimple(`Bienvenida al Nivel ${nivelActual}.`, 0.85); }, 300); 
+            setTimeout(() => onboarding.style.display = 'none', 500);
+        });
+    }
     
     if (btnCerrarTienda) btnCerrarTienda.addEventListener('click', () => {
         storeModal.classList.remove('active'); setTimeout(() => storeModal.classList.add('hidden'), 300);
     });
 
-    const hora = new Date().getHours();
-    if (hora >= 5 && hora < 12) greetingDisplay.innerText = "¡Buenos días! ☀️";
-    else if (hora >= 12 && hora < 19) greetingDisplay.innerText = "¡Buenas tardes! 🌆";
-    else greetingDisplay.innerText = "¡Buenas noches! 🌙";
+    // --- LÓGICA DEL MODAL DE SUBIDA DE NIVEL ---
+    if (btnSiNivel) {
+        btnSiNivel.addEventListener('click', () => {
+            modalNivel.classList.remove('active');
+            setTimeout(() => {
+                modalNivel.classList.add('hidden');
+                nivelActual++;
+                localStorage.setItem('miNivel', nivelActual);
+                transicionSuaveNivel();
+            }, 300);
+        });
+    }
 
-       
-    // --- MOTOR DE VOZ ---
+    if (btnNoNivel) {
+        btnNoNivel.addEventListener('click', () => {
+            modalNivel.classList.remove('active');
+            setTimeout(() => {
+                modalNivel.classList.add('hidden');
+                
+                // Si dice que NO, le inyectamos una tarjeta dorada al final para que pueda subir después
+                if (!document.getElementById('tarjeta-pase-nivel')) {
+                    const tarjetaPase = `
+                        <section class="card" id="tarjeta-pase-nivel">
+                            <div class="glass-content" style="border: 2px solid var(--accent-coral);">
+                                <h2 style="font-size: 1.8rem; margin-bottom: 10px;">¡Nivel ${nivelActual} Dominado! 🏆</h2>
+                                <p style="color: var(--text-dim); margin: 15px 0;">Cuando sientas que estás lista, avanza al siguiente reto.</p>
+                                <button class="start-btn" id="btn-pase-manual" style="width: 100%; margin: 0;">Pasar al Nivel ${nivelActual + 1} ➡️</button>
+                            </div>
+                        </section>
+                    `;
+                    // Usamos insertAdjacentHTML para no destruir los eventos de las tarjetas anteriores
+                    feedContainer.insertAdjacentHTML('beforeend', tarjetaPase);
+                    
+                    setTimeout(() => {
+                        const btnPaseManual = document.getElementById('btn-pase-manual');
+                        if (btnPaseManual) {
+                            btnPaseManual.addEventListener('click', () => {
+                                nivelActual++;
+                                localStorage.setItem('miNivel', nivelActual);
+                                transicionSuaveNivel();
+                            });
+                        }
+                        // Hacemos scroll hasta el nuevo botón
+                        btnPaseManual.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }, 300);
+        });
+    }
+
+    // --- MOTOR DE VOZ BLINDADO ---
     let vocesDisponibles = [];
-    window.utterances = []; // Protege contra el borrado de memoria de Android
+    window.utterances = []; 
 
     if (window.speechSynthesis) {
         vocesDisponibles = window.speechSynthesis.getVoices();
@@ -225,18 +275,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.speechSynthesis) return null;
         if (vocesDisponibles.length === 0) vocesDisponibles = window.speechSynthesis.getVoices();
         
-        // 1. Buscar primero acento latino neutro
         const vozLatina = vocesDisponibles.find(v => v.lang === 'es-US' || v.lang === 'es-MX' || v.lang === 'es-419' || v.lang === 'es-PE');
-        if (vozLatina) return vozLatina;
-        
-        // 2. Si no hay latina, conformarnos con cualquier español
         const vozEsp = vocesDisponibles.find(v => v.lang.startsWith('es'));
-        return vozEsp || vocesDisponibles[0];
+        return vozLatina || vozEsp || vocesDisponibles[0];
+    }
+
+    function purgarMotorDeVoz() {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
     }
 
     window.leerTextoSimple = function(texto, velocidad = 0.8) {
         if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel(); 
+        purgarMotorDeVoz(); 
         
         setTimeout(() => { 
             const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ''));
@@ -254,13 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
             utterance.onerror = () => { window.utterances = window.utterances.filter(u => u !== utterance); };
 
             window.speechSynthesis.speak(utterance);
+            window.speechSynthesis.resume(); 
         }, 50);
     };
 
     function leerFraseConResaltado(texto, cardHtml, velocidad = 0.85) {
         return new Promise((resolve) => {
             if (!window.speechSynthesis) return resolve();
-            window.speechSynthesis.cancel();
+            purgarMotorDeVoz();
 
             setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(texto.replace(/-/g, ''));
@@ -299,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 window.speechSynthesis.speak(utterance);
+                window.speechSynthesis.resume(); 
             }, 50);
         });
     }
@@ -317,7 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const leerSilabaPromesa = new Promise((resolve) => {
             if (!window.speechSynthesis) return resolve();
-            window.speechSynthesis.cancel();
+            
+            purgarMotorDeVoz();
             
             setTimeout(() => {
                 const utterance = new SpeechSynthesisUtterance(silabaAudio + ".");
@@ -341,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 
                 window.speechSynthesis.speak(utterance);
+                window.speechSynthesis.resume();
             }, 20);
         });
         
@@ -352,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let card = elementoHtml.closest('.card');
             let silabasFaltantes = card.querySelectorAll('.no-leida');
             
-            // --- SI COMPLETÓ LA FRASE ---
             if (silabasFaltantes.length === 0 && !card.classList.contains('completada')) {
                 card.classList.add('completada'); 
                 modificarEstrellas(5); 
@@ -370,12 +425,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }, 600); 
 
-                // Mutación del botón
                 let oldBtn = btnContenedor.querySelector('.full-phrase-btn');
-                
                 if (oldBtn) {
                     oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
-                    
                     let newBtn = btnContenedor.querySelector('.repetir-btn');
                     newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -388,6 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- NUEVA LÓGICA DE CONTROL PARA SUBIR DE NIVEL ---
     function verificarSubidaDeNivel(card) {
         let nivelDeEstaTarjeta = parseInt(card.getAttribute('data-nivel'));
         if (nivelDeEstaTarjeta === nivelActual) {
@@ -395,35 +448,31 @@ document.addEventListener('DOMContentLoaded', () => {
             let completadas = document.querySelectorAll(`.card[data-nivel="${nivelActual}"].completada`);
             
             if (totalTarjetasDelNivel.length === completadas.length) {
+                // Seguro: no lanzamos el modal si ya generó el botón manual al final
+                if (document.getElementById('tarjeta-pase-nivel')) return;
+
                 setTimeout(() => {
-                    nivelActual++;
-                    localStorage.setItem('miNivel', nivelActual);
-                    alert(`¡FELICIDADES! 🎉\nDesbloqueaste el NIVEL ${nivelActual}.`);
-                    transicionSuaveNivel(); 
-                }, 1000); 
+                    if (modalNivel) {
+                        modalNivel.classList.remove('hidden');
+                        setTimeout(() => modalNivel.classList.add('active'), 10);
+                        playPop(); // Un sonido alegre para el logro
+                    }
+                }, 800); 
             }
         }
     }
 
     function transicionSuaveNivel() {
         feedContainer.classList.add('fade-out');
-        
         setTimeout(() => {
             feedContainer.innerHTML = '';
-            
             if (displayNivel) displayNivel.innerText = nivelActual;
             aplicarEstiloNivel(nivelActual);
-            
             inicializarTarjetas();
-            
             feedContainer.scrollTo(0,0);
             feedContainer.classList.remove('fade-out');
             feedContainer.classList.add('fade-in');
-            
-            setTimeout(() => {
-                feedContainer.classList.remove('fade-in');
-            }, 500);
-
+            setTimeout(() => { feedContainer.classList.remove('fade-in'); }, 500);
         }, 500); 
     }
 
@@ -465,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="glass-content" data-texto="${item.texto}">
                     <div class="badge">${textoBadge}</div>
                     <p class="reading-text">${htmlProcesado}</p>
-                    <button class="play-trigger full-phrase-btn" title="Manten presionado para escuchar qué hace este botón">
+                    <button class="play-trigger full-phrase-btn" title="Ayuda">
                         <div class="play-icon" style="font-size: 1.2rem;">${item.iconoBoton} Ayuda (-2 ⭐)</div>
                     </button>
                 </div>
@@ -493,7 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (oldBtn) {
                     oldBtn.outerHTML = '<button class="play-trigger repetir-btn"><div class="play-icon" style="font-size: 1.1rem;">🔁 Volver a escuchar</div></button>';
-                    
                     let newBtn = btnContenedor.querySelector('.repetir-btn');
                     newBtn.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -527,71 +575,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-          // --- LÓGICA DEL MINIJUEGO SWIPE ---
+    // --- BASE DE DATOS GLOBAL (Usada por ambos minijuegos) ---
+    const diccionarioJuegos = [
+        { palabra: "Mamá", correcta: true, nivel: 1, icono: "👩‍👧" },
+        { palabra: "Mepa", correcta: false, nivel: 1 },
+        { palabra: "Papá", correcta: true, nivel: 1, icono: "👨‍👧" },
+        { palabra: "Pupo", correcta: false, nivel: 1 },
+        { palabra: "Pato", correcta: true, nivel: 1, icono: "🦆" },
+        { palabra: "Tepo", correcta: false, nivel: 1 },
+        { palabra: "Mesa", correcta: true, nivel: 1, icono: "🪑" },
+        { palabra: "Mesu", correcta: false, nivel: 1 },
+        { palabra: "Sapo", correcta: true, nivel: 1, icono: "🐸" },
+        { palabra: "Sopu", correcta: false, nivel: 1 },
+        { palabra: "Luna", correcta: true, nivel: 1, icono: "🌙" },
+        { palabra: "Linu", correcta: false, nivel: 1 },
+        { palabra: "Dado", correcta: true, nivel: 1, icono: "🎲" },
+        { palabra: "Dudo", correcta: true, nivel: 1 }, 
+        { palabra: "Dapu", correcta: false, nivel: 1 },
+        { palabra: "Gato", correcta: true, nivel: 2, icono: "🐈" },
+        { palabra: "Guti", correcta: false, nivel: 2 },
+        { palabra: "Perro", correcta: true, nivel: 2, icono: "🐕" },
+        { palabra: "Purro", correcta: false, nivel: 2 },
+        { palabra: "Pelota", correcta: true, nivel: 2, icono: "⚽" },
+        { palabra: "Peluto", correcta: false, nivel: 2 },
+        { palabra: "Jugo", correcta: true, nivel: 2, icono: "🧃" },
+        { palabra: "Jago", correcta: false, nivel: 2 },
+        { palabra: "Celular", correcta: true, nivel: 3, icono: "📱" },
+        { palabra: "Cilular", correcta: false, nivel: 3 },
+        { palabra: "Ceviche", correcta: true, nivel: 3, icono: "🐟🍋" },
+        { palabra: "Cevocho", correcta: false, nivel: 3 },
+        { palabra: "Helado", correcta: true, nivel: 3, icono: "🍦" },
+        { palabra: "Holado", correcta: false, nivel: 3 },
+        { palabra: "Zapatilla", correcta: true, nivel: 3, icono: "👟" },
+        { palabra: "Zapotilla", correcta: false, nivel: 3 },
+        { palabra: "Tiktok", correcta: true, nivel: 4, icono: "📱🎵" },
+        { palabra: "Tiktek", correcta: false, nivel: 4 },
+        { palabra: "Yape", correcta: true, nivel: 4, icono: "💸" },
+        { palabra: "Yepa", correcta: false, nivel: 4 },
+        { palabra: "Crush", correcta: true, nivel: 4, icono: "😍" },
+        { palabra: "Crosh", correcta: false, nivel: 4 }
+    ];
+
+    // --- LÓGICA DEL MINIJUEGO SWIPE ---
     const minijuegoModal = document.getElementById('minijuego-modal');
     const tarjetaSwipe = document.getElementById('tarjeta-swipe');
     const palabraSwipe = document.getElementById('palabra-swipe');
     const btnCerrarMinijuego = document.getElementById('btn-cerrar-minijuego');
     const btnJugar = document.getElementById('btn-jugar');
 
-    // 1. BASE DE DATOS DEL MINIJUEGO (Enfoque en Lectura, no ortografía)
-    const diccionarioSwipe = [
-        // Nivel 1: Sílabas simples directas (M, P, S, L, T, D)
-        { palabra: "Mamá", correcta: true, nivel: 1 },
-        { palabra: "Mepa", correcta: false, nivel: 1 },
-        { palabra: "Papá", correcta: true, nivel: 1 },
-        { palabra: "Pupo", correcta: false, nivel: 1 },
-        { palabra: "Pato", correcta: true, nivel: 1 },
-        { palabra: "Tepo", correcta: false, nivel: 1 },
-        { palabra: "Mesa", correcta: true, nivel: 1 },
-        { palabra: "Mesu", correcta: false, nivel: 1 },
-        { palabra: "Sapo", correcta: true, nivel: 1 },
-        { palabra: "Sopu", correcta: false, nivel: 1 },
-        { palabra: "Luna", correcta: true, nivel: 1 },
-        { palabra: "Linu", correcta: false, nivel: 1 },
-        { palabra: "Dado", correcta: true, nivel: 1 },
-        { palabra: "Dudo", correcta: true, nivel: 1 }, // Trampa real
-        { palabra: "Dapu", correcta: false, nivel: 1 },
-
-        // Nivel 2: 2 a 3 sílabas comunes y sonidos un poco más fuertes
-        { palabra: "Gato", correcta: true, nivel: 2 },
-        { palabra: "Guti", correcta: false, nivel: 2 },
-        { palabra: "Perro", correcta: true, nivel: 2 },
-        { palabra: "Purro", correcta: false, nivel: 2 },
-        { palabra: "Pelota", correcta: true, nivel: 2 },
-        { palabra: "Peluto", correcta: false, nivel: 2 },
-        { palabra: "Jugo", correcta: true, nivel: 2 },
-        { palabra: "Jago", correcta: false, nivel: 2 },
-
-        // Nivel 3: Palabras de su entorno, combinaciones y 3+ sílabas
-        { palabra: "Celular", correcta: true, nivel: 3 },
-        { palabra: "Cilular", correcta: false, nivel: 3 },
-        { palabra: "Ceviche", correcta: true, nivel: 3 },
-        { palabra: "Cevocho", correcta: false, nivel: 3 },
-        { palabra: "Helado", correcta: true, nivel: 3 },
-        { palabra: "Holado", correcta: false, nivel: 3 },
-        { palabra: "Zapatilla", correcta: true, nivel: 3 },
-        { palabra: "Zapotilla", correcta: false, nivel: 3 },
-
-        // Nivel 4: Redes y su día a día (Lectura global rápida)
-        { palabra: "Tiktok", correcta: true, nivel: 4 },
-        { palabra: "Tiktek", correcta: false, nivel: 4 },
-        { palabra: "Yape", correcta: true, nivel: 4 },
-        { palabra: "Yepa", correcta: false, nivel: 4 },
-        { palabra: "Crush", correcta: true, nivel: 4 },
-        { palabra: "Crosh", correcta: false, nivel: 4 }
-    ];
-
     let palabraActualJuego = null;
 
-    function cargarNuevaPalabra() {
-        // Filtramos palabras que correspondan al nivel actual o inferiores
-        let palabrasDisponibles = diccionarioSwipe.filter(p => p.nivel <= nivelActual);
-        
-        // Seguro por si no hay palabras
-        if (palabrasDisponibles.length === 0) palabrasDisponibles = diccionarioSwipe; 
-        
-        // Seleccionamos una al azar
+    function cargarNuevaPalabraSwipe() {
+        let palabrasDisponibles = diccionarioJuegos.filter(p => p.nivel <= nivelActual);
+        if (palabrasDisponibles.length === 0) palabrasDisponibles = diccionarioJuegos; 
         palabraActualJuego = palabrasDisponibles[Math.floor(Math.random() * palabrasDisponibles.length)];
         palabraSwipe.innerText = palabraActualJuego.palabra;
     }
@@ -618,54 +654,42 @@ document.addEventListener('DOMContentLoaded', () => {
             tarjetaSwipe.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; 
 
             if (diferenciaX > 100) {
-                // Derecha
                 tarjetaSwipe.style.transform = `translate3d(500px, 0, 0) rotate(30deg)`;
                 tarjetaSwipe.style.opacity = '0';
-                evaluarPalabra(true);
+                evaluarPalabraSwipe(true);
             } else if (diferenciaX < -100) {
-                // Izquierda
                 tarjetaSwipe.style.transform = `translate3d(-500px, 0, 0) rotate(-30deg)`;
                 tarjetaSwipe.style.opacity = '0';
-                evaluarPalabra(false);
+                evaluarPalabraSwipe(false);
             } else {
                 tarjetaSwipe.style.transform = `translate3d(0px, 0, 0) rotate(0deg)`;
             }
         });
 
-                        function evaluarPalabra(esDerecha) {
+        function evaluarPalabraSwipe(esDerecha) {
             let acerto = (esDerecha === palabraActualJuego.correcta);
 
             if (acerto) {
                 playPop(); 
                 modificarEstrellas(1); 
-                lanzarConfeti(); // ¡Aquí activamos tu función de papel picado!
+                lanzarConfeti(); 
             } else {
-                // Creamos un audio independiente temporal para no "despertar" el botón de ayuda del fondo
                 let audioErrorJuego = new Audio('audios/bocina.mp3');
                 audioErrorJuego.play(); 
-                
-                // Disparamos el feedback visual de la pantalla y la tarjeta
                 tarjetaSwipe.classList.add('error-shake');
                 minijuegoModal.classList.add('flash-rojo');
-                
-                // Hacemos que el celular vibre
                 if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50, 50]); 
             }
 
-            // Esperamos 400ms a que pase el efecto o la animación para limpiar todo
             setTimeout(() => {
                 tarjetaSwipe.style.transition = 'none';
                 tarjetaSwipe.style.transform = `translate3d(0px, 0, 0) rotate(0deg)`; 
                 tarjetaSwipe.style.opacity = '1';
-                
-                // Limpiamos las clases de error para la próxima jugada
                 tarjetaSwipe.classList.remove('error-shake');
                 minijuegoModal.classList.remove('flash-rojo');
-                
-                cargarNuevaPalabra(); 
+                cargarNuevaPalabraSwipe(); 
             }, 400);
         }
-
 
         if (btnCerrarMinijuego) {
             btnCerrarMinijuego.addEventListener('click', () => {
@@ -675,16 +699,97 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-   // --- BOTÓN PARA ABRIR EL MINIJUEGO CON INSTRUCCIONES ---
     if (btnJugar && minijuegoModal) {
         btnJugar.addEventListener('click', () => {
             minijuegoModal.classList.remove('hidden');
             setTimeout(() => minijuegoModal.classList.add('active'), 10);
-            
-            cargarNuevaPalabra(); 
-
-            // Instrucción por voz corregida para el nuevo objetivo
+            cargarNuevaPalabraSwipe(); 
             leerTextoSimple("Desliza a la derecha si es una palabra real, o a la izquierda si es una palabra inventada.", 0.9);
+        });
+    }
+
+    // --- LÓGICA DEL MINIJUEGO DE ESCRITURA ---
+    const modalEscritura = document.getElementById('minijuego-escritura');
+    const btnEscribir = document.getElementById('btn-escribir');
+    const btnCerrarEscritura = document.getElementById('btn-cerrar-escritura');
+    const imagenLeer = document.getElementById('imagen-leer'); 
+    const inputEscritura = document.getElementById('input-escritura');
+    const btnVerificar = document.getElementById('btn-verificar-escritura');
+    const btnEscucharPalabra = document.getElementById('btn-escuchar-palabra');
+    const tarjetaEscritura = document.getElementById('tarjeta-escritura');
+
+    let palabraObjetivo = "";
+
+    function cargarPalabraEscritura() {
+        let palabrasValidas = diccionarioJuegos.filter(p => p.nivel <= nivelActual && p.correcta === true && p.icono);
+        if (palabrasValidas.length === 0) palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
+        
+        let seleccion = palabrasValidas[Math.floor(Math.random() * palabrasValidas.length)];
+        palabraObjetivo = seleccion.palabra;
+        imagenLeer.innerText = seleccion.icono; 
+        
+        inputEscritura.value = ""; 
+        inputEscritura.focus();
+    }
+
+    if (btnEscribir && modalEscritura) {
+        btnEscribir.addEventListener('click', () => {
+            modalEscritura.classList.remove('hidden');
+            setTimeout(() => modalEscritura.classList.add('active'), 10);
+            cargarPalabraEscritura();
+            leerTextoSimple("Mira el dibujo y escribe la palabra en la caja de abajo.", 0.9);
+        });
+
+        btnCerrarEscritura.addEventListener('click', () => {
+            modalEscritura.classList.remove('active');
+            setTimeout(() => modalEscritura.classList.add('hidden'), 300);
+        });
+
+        btnEscucharPalabra.addEventListener('click', () => {
+            leerTextoSimple(palabraObjetivo, 0.8);
+        });
+
+        function validarEscritura() {
+            let textoIngresado = inputEscritura.value.trim().toLowerCase();
+            let textoReal = palabraObjetivo.toLowerCase();
+
+            let ingresadoLimpio = textoIngresado.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let realLimpio = textoReal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            if (ingresadoLimpio === realLimpio && ingresadoLimpio !== "") {
+                playPop();
+                modificarEstrellas(2); 
+                lanzarConfeti();
+                
+                inputEscritura.style.backgroundColor = 'rgba(0, 230, 118, 0.2)'; 
+                
+                setTimeout(() => {
+                    inputEscritura.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                    cargarPalabraEscritura();
+                }, 800);
+            } else {
+                let audioErrorEscribir = new Audio('audios/bocina.mp3');
+                audioErrorEscribir.play();
+                
+                tarjetaEscritura.classList.add('error-shake');
+                modalEscritura.classList.add('flash-rojo');
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+                
+                setTimeout(() => {
+                    tarjetaEscritura.classList.remove('error-shake');
+                    modalEscritura.classList.remove('flash-rojo');
+                    inputEscritura.focus();
+                }, 400);
+            }
+        }
+
+        btnVerificar.addEventListener('click', validarEscritura);
+
+        inputEscritura.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                inputEscritura.blur(); 
+                validarEscritura();
+            }
         });
     }
 });

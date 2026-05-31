@@ -39,27 +39,21 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px; /* Espacio estricto entre elementos */
+    flex-wrap: wrap; 
     margin-bottom: 15px;
+    gap: 15px;
 }
 
 .user-info {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    flex: 1; /* Le dice al div que tome el espacio disponible */
-    min-width: 0; /* Evita que el texto empuje al botón fuera de la pantalla */
+    flex: 1; 
+    min-width: 0; 
 }
 
-
-.user-greeting { 
-    font-weight: 600; 
-    font-size: 1.1rem; 
-}
-
-.coin-display {
-    font-size: 1rem;
-}
+.user-greeting { font-weight: 600; font-size: 1.1rem; }
+.coin-display { font-size: 1rem; }
 
 .progress-container {
     background: rgba(255, 255, 255, 0.1);
@@ -77,10 +71,9 @@ body {
     transition: width 0.5s ease-out;
 }
 
-/* --- Botón WhatsApp AHORA FLUIDO Y BLINDADO --- */
 .wsp-btn {
-    flex-shrink: 0; /* NO ME APLASTES */
-    white-space: nowrap; /* Mantiene el texto en una sola línea */
+    flex-shrink: 0; 
+    white-space: nowrap; 
     background: #25D366;
     color: white;
     border: none;
@@ -107,7 +100,6 @@ body {
 }
 
 .feed::-webkit-scrollbar { display: none; }
-
 .feed.fade-out { opacity: 0; }
 .feed.fade-in { opacity: 1; }
 
@@ -132,7 +124,6 @@ body {
     transition: border 0.3s ease;
 }
 
-/* --- Badges de Categoría --- */
 .badge {
     display: inline-block;
     padding: 5px 15px;
@@ -144,7 +135,6 @@ body {
     margin-bottom: 20px;
 }
 
-/* --- Texto de Lectura y Sílabas --- */
 .reading-text {
     font-size: 2.2rem;
     font-weight: 800;
@@ -167,15 +157,8 @@ body {
     text-shadow: 0 0 10px var(--accent-coral);
 }
 
-.guion {
-    color: var(--text-dim);
-    opacity: 0.4;
-}
-
-.espacio {
-    display: inline-block;
-    width: 10px;
-}
+.guion { color: var(--text-dim); opacity: 0.4; }
+.espacio { display: inline-block; width: 10px; }
 
 .palabra {
     display: inline-block;
@@ -188,11 +171,9 @@ body {
     text-shadow: 0 0 15px var(--accent-purple);
 }
 
-.word-highlight .silaba {
-    color: var(--accent-purple) !important;
-}
+.word-highlight .silaba { color: var(--accent-purple) !important; }
 
-/* --- Botones de Acción de Tarjeta --- */
+/* --- Botones --- */
 .full-phrase-btn {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
@@ -240,9 +221,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.leyendo-guia {
-    animation: latidoGuia 0.8s infinite alternate !important;
-}
+.leyendo-guia { animation: latidoGuia 0.8s infinite alternate !important; }
 
 @keyframes latidoGuia {
     from { transform: scale(1); filter: brightness(1); }
@@ -300,9 +279,7 @@ body {
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.meme-modal.active .meme-content img {
-    transform: scale(1) rotate(-3deg);
-}
+.meme-modal.active .meme-content img { transform: scale(1) rotate(-3deg); }
 
 .store-content {
     background: var(--card-bg);
@@ -328,27 +305,8 @@ body {
     margin-bottom: 10px;
 }
 
-.prize-img {
-    width: 45px;
-    height: 45px;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-.prize-icon {
-    font-size: 2rem;
-    margin-right: 15px;
-    width: 45px;
-    text-align: center;
-}
-
-.prize-name {
-    flex: 1;
-    text-align: left;
-    margin-left: 12px;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
+.prize-icon { font-size: 2rem; margin-right: 15px; width: 45px; text-align: center; }
+.prize-name { flex: 1; text-align: left; margin-left: 12px; font-weight: 600; font-size: 0.95rem; }
 
 .buy-btn {
     background: var(--accent-purple);
@@ -410,6 +368,7 @@ body {
     0% { transform: translateY(0) rotate(0deg); opacity: 1; }
     100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
+
 /* --- MINIJUEGO SWIPE --- */
 .swipe-card {
     background: var(--card-bg);
@@ -426,13 +385,11 @@ body {
     box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     transition: transform 0.3s ease, opacity 0.3s ease;
     user-select: none;
-    touch-action: none; /* Bloquea el scroll nativo del celular */
+    touch-action: none; 
     cursor: grab;
 }
 
-.swipe-card:active {
-    cursor: grabbing;
-}
+.swipe-card:active { cursor: grabbing; }
 
 .swipe-instructions {
     display: flex;
@@ -443,6 +400,7 @@ body {
     font-size: 1.1rem;
     text-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
+
 /* --- FEEDBACK VISUAL DE ERROR --- */
 @keyframes vibrarError {
     0% { transform: translate3d(0, 0, 0); }
@@ -462,4 +420,24 @@ body {
 .flash-rojo {
     background: rgba(255, 23, 68, 0.25) !important;
     transition: background 0.1s ease;
+}
+
+/* --- MINIJUEGO ESCRITURA --- */
+.escritura-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.8rem;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.3s;
+    font-weight: bold;
+}
+
+.escritura-input:focus {
+    border-color: var(--accent-coral);
+    box-shadow: 0 0 15px rgba(255, 127, 80, 0.3);
 }
