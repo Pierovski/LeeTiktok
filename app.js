@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalNivel.classList.remove('active');
             setTimeout(() => {
                 modalNivel.classList.add('hidden');
-                iniciarExamenNivel(); // En lugar de subir de frente, exigimos el examen
+                iniciarExamenNivel();
             }, 300);
         });
     }
@@ -229,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 modalNivel.classList.add('hidden');
                 
-                // Si dice que NO, le inyectamos una tarjeta dorada al final para que pueda dar su examen después
                 if (!document.getElementById('tarjeta-pase-nivel')) {
                     const tarjetaPase = `
                         <section class="card" id="tarjeta-pase-nivel">
@@ -441,14 +440,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let completadas = document.querySelectorAll(`.card[data-nivel="${nivelActual}"].completada`);
             
             if (totalTarjetasDelNivel.length === completadas.length) {
-                // Si ya generó la tarjeta dorada de pase manual, no abrimos el modal de nuevo
                 if (document.getElementById('tarjeta-pase-nivel')) return;
 
                 setTimeout(() => {
                     if (modalNivel) {
                         modalNivel.classList.remove('hidden');
                         setTimeout(() => modalNivel.classList.add('active'), 10);
-                        playPop(); // Un sonido alegre para celebrar que terminó las tarjetas
+                        playPop(); 
                     }
                 }, 800); 
             }
@@ -568,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- BASE DE DATOS GLOBAL (Usada por ambos minijuegos y el examen) ---
+    // --- BASE DE DATOS GLOBAL CORREGIDA Y AMPLIADA ---
     const diccionarioJuegos = [
         { palabra: "Mamá", correcta: true, nivel: 1, icono: "👩‍👧" },
         { palabra: "Mepa", correcta: false, nivel: 1 },
@@ -576,7 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { palabra: "Pupo", correcta: false, nivel: 1 },
         { palabra: "Pato", correcta: true, nivel: 1, icono: "🦆" },
         { palabra: "Tepo", correcta: false, nivel: 1 },
-        { palabra: "Mesa", correcta: true, nivel: 1, icono: "🪑" },
+        { palabra: "Silla", correcta: true, nivel: 1, icono: "🪑" }, // Corregido: Silla
+        { palabra: "Mesa", correcta: true, nivel: 1, icono: "🍽️" },  // Nueva opción: Mesa
         { palabra: "Mesu", correcta: false, nivel: 1 },
         { palabra: "Sapo", correcta: true, nivel: 1, icono: "🐸" },
         { palabra: "Sopu", correcta: false, nivel: 1 },
@@ -585,6 +584,11 @@ document.addEventListener('DOMContentLoaded', () => {
         { palabra: "Dado", correcta: true, nivel: 1, icono: "🎲" },
         { palabra: "Dudo", correcta: true, nivel: 1 }, 
         { palabra: "Dapu", correcta: false, nivel: 1 },
+        { palabra: "Casa", correcta: true, nivel: 1, icono: "🏠" },
+        { palabra: "Coso", correcta: false, nivel: 1 },
+        { palabra: "Moto", correcta: true, nivel: 2, icono: "🏍️" },
+        { palabra: "Muta", correcta: false, nivel: 2 },
+        { palabra: "Reloj", correcta: true, nivel: 2, icono: "⌚" },
         { palabra: "Gato", correcta: true, nivel: 2, icono: "🐈" },
         { palabra: "Guti", correcta: false, nivel: 2 },
         { palabra: "Perro", correcta: true, nivel: 2, icono: "🐕" },
@@ -609,6 +613,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { palabra: "Crosh", correcta: false, nivel: 4 }
     ];
 
+    // --- LÓGICA DE MEMORIA PARA MINIJUEGOS ---
+    let palabrasDominadas = JSON.parse(localStorage.getItem('palabrasDominadas')) || [];
+
     // --- LÓGICA DEL MINIJUEGO SWIPE ---
     const minijuegoModal = document.getElementById('minijuego-modal');
     const tarjetaSwipe = document.getElementById('tarjeta-swipe');
@@ -619,8 +626,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let palabraActualJuego = null;
 
     function cargarNuevaPalabraSwipe() {
-        let palabrasDisponibles = diccionarioJuegos.filter(p => p.nivel <= nivelActual);
-        if (palabrasDisponibles.length === 0) palabrasDisponibles = diccionarioJuegos; 
+        // Filtramos para evitar repetir las palabras dominadas
+        let palabrasDisponibles = diccionarioJuegos.filter(p => p.nivel <= nivelActual && !palabrasDominadas.includes(p.palabra));
+        
+        // Si ya dominó todo, reiniciamos el ciclo para repasar
+        if (palabrasDisponibles.length === 0) {
+            palabrasDominadas = []; 
+            localStorage.setItem('palabrasDominadas', JSON.stringify(palabrasDominadas));
+            palabrasDisponibles = diccionarioJuegos.filter(p => p.nivel <= nivelActual);
+        }
+        
         palabraActualJuego = palabrasDisponibles[Math.floor(Math.random() * palabrasDisponibles.length)];
         palabraSwipe.innerText = palabraActualJuego.palabra;
     }
@@ -666,6 +681,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 playPop(); 
                 modificarEstrellas(1); 
                 lanzarConfeti(); 
+                
+                // Guardar como dominada en el momento que se acierta
+                if (!palabrasDominadas.includes(palabraActualJuego.palabra)) {
+                    palabrasDominadas.push(palabraActualJuego.palabra);
+                    localStorage.setItem('palabrasDominadas', JSON.stringify(palabrasDominadas));
+                }
             } else {
                 let audioErrorJuego = new Audio('audios/bocina.mp3');
                 audioErrorJuego.play(); 
@@ -716,13 +737,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let examenPalabras = [];
     let examenIndice = 0;
 
-    // Función que dispara el examen para pasar de nivel
     window.iniciarExamenNivel = function() {
         let palabrasValidas = diccionarioJuegos.filter(p => p.nivel === nivelActual && p.correcta === true && p.icono);
         if (palabrasValidas.length === 0) palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
         
         palabrasValidas = palabrasValidas.sort(() => Math.random() - 0.5);
-        examenPalabras = palabrasValidas.slice(0, 3); // Le exigimos 3 palabras correctas seguidas
+        examenPalabras = palabrasValidas.slice(0, 3); 
         examenIndice = 0;
         modoExamen = true;
 
@@ -753,8 +773,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const tituloModal = document.querySelector('#minijuego-escritura h2');
         if(tituloModal) tituloModal.innerText = "¿Qué ves aquí?";
 
-        let palabrasValidas = diccionarioJuegos.filter(p => p.nivel <= nivelActual && p.correcta === true && p.icono);
-        if (palabrasValidas.length === 0) palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
+        // Evitar que se repitan las palabras ya escritas correctamente
+        let palabrasValidas = diccionarioJuegos.filter(p => p.nivel <= nivelActual && p.correcta === true && p.icono && !palabrasDominadas.includes(p.palabra));
+        
+        if (palabrasValidas.length === 0) {
+            palabrasDominadas = [];
+            localStorage.setItem('palabrasDominadas', JSON.stringify(palabrasDominadas));
+            palabrasValidas = diccionarioJuegos.filter(p => p.correcta === true && p.icono);
+        }
         
         let seleccion = palabrasValidas[Math.floor(Math.random() * palabrasValidas.length)];
         palabraObjetivo = seleccion.palabra;
@@ -799,6 +825,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 modificarEstrellas(2); 
                 lanzarConfeti();
                 
+                // Guardar la palabra escrita para no repetirla, solo si no es examen
+                if (!modoExamen && !palabrasDominadas.includes(palabraObjetivo)) {
+                    palabrasDominadas.push(palabraObjetivo);
+                    localStorage.setItem('palabrasDominadas', JSON.stringify(palabrasDominadas));
+                }
+                
                 inputEscritura.style.backgroundColor = 'rgba(0, 230, 118, 0.2)'; 
                 
                 setTimeout(() => {
@@ -809,7 +841,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (examenIndice < examenPalabras.length) {
                             cargarPalabraEscrituraExamen();
                         } else {
-                            // ¡Pasó el examen final de 3 palabras!
                             modoExamen = false;
                             modalEscritura.classList.remove('active');
                             setTimeout(() => {
