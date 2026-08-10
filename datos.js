@@ -1,5 +1,5 @@
 const frasesDatos = [
-    // --- NIVEL 1: Sílabas simples (12 frases) ---
+    // --- NIVEL 1: Sílabas simples y directas ---
     { "id": 1, "texto": "pa-sa la ta-za", "tipo": "reto", "iconoBoton": "☕", "nivel": 1 },
     { "id": 2, "texto": "mi ro-pa nue-va", "tipo": "moda", "iconoBoton": "👗", "nivel": 1 },
     { "id": 3, "texto": "te de-jo la lla-ve", "tipo": "reto", "iconoBoton": "🔑", "nivel": 1 },
@@ -12,8 +12,22 @@ const frasesDatos = [
     { "id": 10, "texto": "la ca-sa es tu-ya", "tipo": "reto", "iconoBoton": "🏠", "nivel": 1 },
     { "id": 11, "texto": "e-sa es mi me-sa", "tipo": "reto", "iconoBoton": "🪑", "nivel": 1 },
     { "id": 12, "texto": "di-me to-do", "tipo": "chisme", "iconoBoton": "🗣️", "nivel": 1 },
+    { "id": 101, "texto": "yo ve-o un ga-to", "tipo": "animales", "iconoBoton": "🐈", "nivel": 1 },
+    { "id": 102, "texto": "la lu-na ba-ja", "tipo": "reto", "iconoBoton": "🌙", "nivel": 1 },
+    { "id": 103, "texto": "e-se ni-ño rí-e", "tipo": "reto", "iconoBoton": "😁", "nivel": 1 },
+    { "id": 104, "texto": "mi pe-lo ro-jo", "tipo": "moda", "iconoBoton": "👩‍🦰", "nivel": 1 },
+    { "id": 105, "texto": "pa-pá me mi-ra", "tipo": "familia", "iconoBoton": "👀", "nivel": 1 },
+    { "id": 106, "texto": "la go-ma pe-ga", "tipo": "reto", "iconoBoton": "🧴", "nivel": 1 },
+    { "id": 107, "texto": "u-na ro-sa ro-ja", "tipo": "amor", "iconoBoton": "🌹", "nivel": 1 },
+    { "id": 108, "texto": "la mo-to su-be", "tipo": "vehiculo", "iconoBoton": "🏍️", "nivel": 1 },
+    { "id": 109, "texto": "pi-de tu pi-za", "tipo": "comida", "iconoBoton": "🍕", "nivel": 1 },
+    { "id": 110, "texto": "da-me un be-so", "tipo": "amor", "iconoBoton": "😘", "nivel": 1 },
 
-    // --- NIVEL 2: Frenos y Jerga (10 frases) ---
+    // --- NIVEL 2: Frenos, Jerga y MODO HISTORIA ---
+    { "id": 201, "historia": 1, "orden": 1, "texto": "ha-bía un pe-rro", "tipo": "cuento", "iconoBoton": "🐕", "nivel": 2 },
+    { "id": 202, "historia": 1, "orden": 2, "texto": "se co-mió mi pan", "tipo": "cuento", "iconoBoton": "🥖", "nivel": 2 },
+    { "id": 203, "historia": 1, "orden": 3, "texto": "y se fue co-rrien-do", "tipo": "cuento", "iconoBoton": "💨", "nivel": 2 },
+    
     { "id": 13, "texto": "qué pal-ta con él", "tipo": "broma", "iconoBoton": "🥑", "nivel": 2 },
     { "id": 14, "texto": "pon el cel a-quí", "tipo": "reto", "iconoBoton": "📱", "nivel": 2 },
     { "id": 15, "texto": "sal de a-hí", "tipo": "reto", "iconoBoton": "🏃‍♀️", "nivel": 2 },
@@ -22,10 +36,8 @@ const frasesDatos = [
     { "id": 18, "texto": "es-tás muy top", "tipo": "moda", "iconoBoton": "✨", "nivel": 2 },
     { "id": 19, "texto": "fies-ta en la ca-sa", "tipo": "reto", "iconoBoton": "🎉", "nivel": 2 },
     { "id": 20, "texto": "mi-ra a e-se man", "tipo": "chisme", "iconoBoton": "👀", "nivel": 2 },
-    { "id": 21, "texto": "no quie-ro ir", "tipo": "reto", "iconoBoton": "🙅‍♀️", "nivel": 2 },
-    { "id": 22, "texto": "un pan con que-so", "tipo": "comida", "iconoBoton": "🥪", "nivel": 2 },
 
-    // --- NIVEL 3: Sílabas Trabadas (10 frases) ---
+    // --- NIVEL 3: Sílabas Trabadas ---
     { "id": 25, "texto": "gran pro-ble-ma", "tipo": "chisme", "iconoBoton": "😱", "nivel": 3 },
     { "id": 26, "texto": "fra-se de a-mor", "tipo": "amor", "iconoBoton": "💌", "nivel": 3 },
     { "id": 27, "texto": "bro-ma pe-sa-da", "tipo": "broma", "iconoBoton": "😂", "nivel": 3 },
@@ -37,7 +49,7 @@ const frasesDatos = [
     { "id": 33, "texto": "blo-que-a a e-se chi-co", "tipo": "reto", "iconoBoton": "🚫", "nivel": 3 },
     { "id": 34, "texto": "no te a-tra-ses", "tipo": "reto", "iconoBoton": "⏰", "nivel": 3 },
 
-    // --- NIVEL 4: TikTok sin guiones (8 frases) ---
+    // --- NIVEL 4: TikTok sin guiones ---
     { "id": 35, "texto": "Contexto por favor", "tipo": "tiktok", "iconoBoton": "🤔", "nivel": 4 },
     { "id": 36, "texto": "Pov eres la mayor", "tipo": "tiktok", "iconoBoton": "👑", "nivel": 4 },
     { "id": 37, "texto": "Storytime de cómo", "tipo": "tiktok", "iconoBoton": "📖", "nivel": 4 },
