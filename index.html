@@ -31,8 +31,12 @@
                 <button id="btn-wsp" class="wsp-btn">💬 Presumir</button>
             </div>
             <div class="progress-container"><div class="progress-bar" id="level-progress-bar"></div></div>
-            <div style="text-align: center; font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">
-                Nivel Actual: <strong id="display-nivel" style="color: var(--accent-purple);">1</strong>
+            
+            <!-- CONTROLES DE NIVEL -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 0.95rem; color: var(--text-dim); margin-top: 15px;">
+                <button id="btn-bajar-nivel" class="nav-nivel-btn">◀</button>
+                <span>Nivel: <strong id="display-nivel" style="color: var(--accent-purple); font-size: 1.2rem;">1</strong></span>
+                <button id="btn-subir-nivel" class="nav-nivel-btn">▶</button>
             </div>
         </header>
 
@@ -52,7 +56,7 @@
                 <button id="btn-abrir-letras" class="start-btn" style="width: 100%; margin-bottom: 10px;">🅰️ Abecedario</button>
                 <button id="btn-abrir-swipe" class="start-btn" style="width: 100%; margin-bottom: 10px;">👈 Swipe Falso</button>
                 <button id="btn-abrir-escritura" class="start-btn" style="width: 100%; margin-bottom: 10px;">✍️ Escritura y Voz</button>
-                <button id="btn-abrir-memorama" class="start-btn" style="width: 100%; margin-bottom: 10px; background: linear-gradient(90deg, #ff9100, #ff1744);">🃏 Memorama ⏱️</button>
+                <button id="btn-abrir-memorama" class="start-btn" style="width: 100%; margin-bottom: 10px; background: linear-gradient(90deg, #ff9100, #ff1744);">🃏 Memorama</button>
                 <button id="btn-abrir-oraciones" class="start-btn" style="width: 100%; margin-bottom: 10px; background: linear-gradient(90deg, #00e676, #18ffff);">🧩 Oraciones</button>
                 <button id="btn-cerrar-menu-juegos" class="full-phrase-btn" style="margin-top: 15px;">Volver</button>
             </div>
@@ -82,10 +86,9 @@
         <!-- MODAL MEMORAMA -->
         <div id="minijuego-memorama" class="meme-modal hidden" style="z-index: 3000;">
             <div class="swipe-container leer-ui-target" style="width: 95%;">
-                <h2 style="color: var(--accent-purple); margin-bottom: 10px; text-align: center;">Memorama</h2>
-                <h3 id="timer-memorama" style="color: #ff1744; margin-bottom: 15px;">⏱️ 30s</h3>
+                <h2 style="color: var(--accent-purple); margin-bottom: 20px; text-align: center;">Memorama</h2>
                 <div id="grid-memorama" class="memorama-grid"></div>
-                <button id="btn-cerrar-memorama" class="start-btn" style="margin-top: 20px;">Salir</button>
+                <button id="btn-cerrar-memorama" class="start-btn" style="margin-top: 30px;">Salir</button>
             </div>
         </div>
 
@@ -100,7 +103,6 @@
             </div>
         </div>
 
-        <!-- RESTO DE MODALES EXISTENTES -->
         <div id="modal-nivel" class="meme-modal hidden" style="z-index: 4000;"><div class="store-content"><div style="font-size: 4rem; margin-bottom: 10px;">🏆</div><h2 style="color: var(--accent-coral); margin-bottom: 15px;">¡Nivel Dominado!</h2><button id="btn-si-nivel" class="start-btn" style="width: 100%; margin-bottom: 10px;">Iniciar examen 📝</button><button id="btn-no-nivel" class="full-phrase-btn" style="width: 100%;">No, repasar</button></div></div>
         
         <div id="modal-examen" class="meme-modal hidden" style="z-index: 5000;">
