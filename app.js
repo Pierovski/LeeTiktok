@@ -33,12 +33,12 @@ window.mostrarMensaje = function(texto, tipo = 'info') {
     setTimeout(() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 2800);
 };
 
-// --- SONIDOS NATIVOS CON PROTECCIÓN ---
+// --- SONIDOS NATIVOS ---
 const AudioUI = {
-    victoria: new Audio('error.mp3'), // Fallback seguro si está en raíz o carpeta
+    victoria: new Audio('victoria.mp3'),
     error: new Audio('error.mp3'),
     playVictoria() {
         this.victoria.currentTime = 0;
@@ -49,15 +49,12 @@ const AudioUI = {
         this.error.play().catch(() => {});
     }
 };
-// Intentamos cargar desde carpeta audios/ o raíz según tu estructura
-AudioUI.victoria.src = 'victoria.mp3';
 AudioUI.victoria.onerror = () => { AudioUI.victoria.src = 'audios/victoria.mp3'; };
-AudioUI.error.src = 'error.mp3';
 AudioUI.error.onerror = () => { AudioUI.error.src = 'audios/error.mp3'; };
-AudioUI.victoria.volume = 0.5;
-AudioUI.error.volume = 0.5;
+AudioUI.victoria.volume = 0.45;
+AudioUI.error.volume = 0.45;
 
-// --- GESTIÓN DE ESTADO UNIFICADA ---
+// --- GESTIÓN DE ESTADO ---
 const AppState = {
     state: {
         streak: parseInt(localStorage.getItem('streak') || localStorage.getItem('miRacha')) || 0,
@@ -67,28 +64,34 @@ const AppState = {
         dicAdmin: JSON.parse(localStorage.getItem('dicAdmin')) || [],
         rachaActualizadaHoy: localStorage.getItem('rachaActualizadaHoy'),
         ultimoIngresoLectura: localStorage.getItem('ultimoIngresoLectura'),
-        vozPreferidaURI: localStorage.getItem('vozPreferidaURI') || ''
+        vozPreferidaURI: localStorage.getItem('vozPreferidaURI') || 'AUTO_CLOUD'
     },
     listeners: [],
-    
     subscribe(listener) {
         this.listeners.push(listener);
         listener(this.state);
     },
-    
     update(key, value) {
         this.state[key] = value;
         const valueToStore = typeof value === 'object' ? JSON.stringify(value) : value;
         localStorage.setItem(key, valueToStore);
-        // Compatibilidad con nombres antiguos
         if (key === 'nivelActual') localStorage.setItem('miNivel', valueToStore);
         if (key === 'streak') localStorage.setItem('miRacha', valueToStore);
         this.notify();
     },
-    
     notify() {
         this.listeners.forEach(listener => listener(this.state));
     }
+};
+
+// --- CONVERTIDOR FONÉTICO GLOBAL PARA SÍLABAS ---
+window.convertirSilabaAFonetica = function(silaba) {
+    const limpia = (silaba || '').toLowerCase().trim().replace(/[-.,!¡?¿]/g, '');
+    if (typeof FonoSilabas !== 'undefined' && FonoSilabas[limpia]) {
+        return FonoSilabas[limpia];
+    }
+    // Si no está en el mapa, aseguramos tilde en la última vocal + punto para que jamás deletree
+    return limpia.replace(/([aeiou])$/i, (v) => ({a:'á',e:'é',i:'í',o:'ó',u:'ú'}[v.toLowerCase()] || v)) + '.';
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -114,20 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
             examen: document.getElementById('modal-examen')
         }
     };
-    
-    // --- LÓGICA DE DICCIONARIO COMPLETO ---
+
     function obtenerDiccionario() {
         const base = typeof palabrasDatos !== 'undefined' ? palabrasDatos : [];
         return [...base, ...AppState.state.dicAdmin];
     }
 
-    // --- RENDERIZADO REACTIVO DE UI ---
     AppState.subscribe((state) => {
         if(DOM.streakDisplay) DOM.streakDisplay.innerText = state.streak;
         if(DOM.displayNivel) DOM.displayNivel.innerText = state.nivelActual;
-        if(DOM.escudoBadge) {
-            DOM.escudoBadge.classList.toggle('hidden', !state.tieneEscudo);
-        }
+        if(DOM.escudoBadge) DOM.escudoBadge.classList.toggle('hidden', !state.tieneEscudo);
         
         if(DOM.mascotaEl) {
             if(state.streak >= 10) DOM.mascotaEl.innerText = "🦅";
@@ -159,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (AppState.state.ultimoIngresoLectura) {
                 let ayer = new Date(); 
                 ayer.setDate(ayer.getDate() - 1);
-                
                 if (AppState.state.ultimoIngresoLectura === ayer.toDateString()) { 
                     nuevaRacha++; 
                 } else if (tieneEscudo) {
@@ -171,52 +169,46 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { 
                 nuevaRacha = 1; 
             }
-            
             AppState.update('ultimoIngresoLectura', hoy);
             AppState.update('rachaActualizadaHoy', hoy);
             AppState.update('streak', nuevaRacha);
         }
     }
 
-    // --- MOTOR DE SÍNTESIS DE VOZ NATURAL (ANDROID + OFFLINE/ONLINE) ---
-    let vocesDisponibles = [];
+    // =========================================================================
+    // MOTOR DE VOZ DUAL: NUBE HUMANA + SISTEMA ANDROID ESTRICTO EN ESPAÑOL
+    // =========================================================================
+    let vocesEspanol = [];
+    let cloudAudioPlayer = new Audio();
 
     function puntuarVozEspanol(v) {
         const lang = (v.lang || '').toLowerCase();
         const name = (v.name || '').toLowerCase();
-        if (!lang.startsWith('es')) return -1;
+        if (!lang.startsWith('es')) return -100; // Bloquea voces en inglés que dicen "bi"
 
-        let score = 10;
-        // Preferencia regional Perú / Latinoamérica
-        if (lang.includes('pe')) score += 50;
-        else if (lang.includes('419') || lang.includes('us') || lang.includes('mx') || lang.includes('co') || lang.includes('cl') || lang.includes('ar')) score += 40;
-        else if (lang.includes('es')) score += 15;
-
-        // Preferencia por motores neuronales / naturales de Google y Microsoft
-        if (name.includes('natural') || name.includes('neural')) score += 60;
-        if (name.includes('google')) score += 35;
-        if (name.includes('network') || name.includes('online')) score += 20;
-        if (name.includes('sabina') || name.includes('dalia') || name.includes('paulina') || name.includes('helena')) score += 25;
-
+        let score = 20;
+        if (lang.includes('pe') || lang.includes('419') || lang.includes('mx') || lang.includes('us')) score += 50;
+        if (name.includes('natural') || name.includes('neural') || name.includes('google')) score += 40;
         return score;
     }
 
     function cargarVoces() {
         if (!window.speechSynthesis) return;
         const todas = window.speechSynthesis.getVoices();
-        if (!todas.length) return;
-
-        vocesDisponibles = todas
+        // Filtramos ESTRICTAMENTE solo voces que empiecen con "es" para jamás asignar una voz en inglés
+        vocesEspanol = todas
             .filter(v => (v.lang || '').toLowerCase().startsWith('es'))
             .sort((a, b) => puntuarVozEspanol(b) - puntuarVozEspanol(a));
 
-        if (vocesDisponibles.length === 0) vocesDisponibles = todas;
-
-        // Poblar el selector del Panel Admin
         if (DOM.selectVozAdmin) {
-            DOM.selectVozAdmin.innerHTML = vocesDisponibles.map(v => 
-                `<option value="${v.voiceURI}" ${v.voiceURI === AppState.state.vozPreferidaURI ? 'selected' : ''}>${v.name} (${v.lang})</option>`
+            const opcionesSistema = vocesEspanol.map(v => 
+                `<option value="${v.voiceURI}" ${v.voiceURI === AppState.state.vozPreferidaURI ? 'selected' : ''}>📱 ${v.name} (${v.lang})</option>`
             ).join('');
+
+            DOM.selectVozAdmin.innerHTML = `
+                <option value="AUTO_CLOUD" ${AppState.state.vozPreferidaURI === 'AUTO_CLOUD' ? 'selected' : ''}>☁️ Voz Humana Natural (Online + Offline)</option>
+                ${opcionesSistema}
+            `;
         }
     }
 
@@ -225,67 +217,98 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.onvoiceschanged = cargarVoces;
     }
 
-    function obtenerMejorVoz() {
-        if (!vocesDisponibles.length) cargarVoces();
-        if (AppState.state.vozPreferidaURI) {
-            const preferida = vocesDisponibles.find(v => v.voiceURI === AppState.state.vozPreferidaURI);
-            if (preferida) return preferida;
+    function hablarConMotorLocal(textoLimpio, vel = 0.88, onEndCallback = null) {
+        if (!window.speechSynthesis) {
+            if (onEndCallback) onEndCallback();
+            return;
         }
-        return vocesDisponibles[0] || null;
+        window.speechSynthesis.cancel();
+        setTimeout(() => {
+            const u = new SpeechSynthesisUtterance(textoLimpio);
+            // Forzamos idioma español de Perú aunque el celular no reporte voces cargadas
+            u.lang = 'es-PE';
+            u.rate = vel;
+            u.pitch = 1.0;
+
+            if (!vocesEspanol.length) cargarVoces();
+            const vozElegida = vocesEspanol.find(v => v.voiceURI === AppState.state.vozPreferidaURI) || vocesEspanol[0];
+            if (vozElegida) {
+                u.voice = vozElegida;
+                u.lang = vozElegida.lang;
+            }
+
+            u.onend = () => { if (onEndCallback) onEndCallback(); };
+            u.onerror = () => { if (onEndCallback) onEndCallback(); };
+            window.speechSynthesis.speak(u);
+        }, 35);
     }
 
     window.leerTextoSimple = function(texto, vel = 0.88) {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        setTimeout(() => {
-            const limpio = texto.replace(/-/g, '');
-            const u = new SpeechSynthesisUtterance(limpio);
-            const voz = obtenerMejorVoz();
-            if (voz) { u.voice = voz; u.lang = voz.lang; }
-            else { u.lang = 'es-PE'; }
-            u.rate = vel;
-            u.pitch = 1.0; // Tono 1.0 evita que suene metálica o robotizada
-            window.speechSynthesis.speak(u);
-        }, 40);
+        const textoLimpio = (texto || '').replace(/-/g, '');
+        if (!textoLimpio) return;
+
+        // Si está elegido el modo Nube Humana y hay internet, intentamos voz neuronal de Google Latino
+        if (AppState.state.vozPreferidaURI === 'AUTO_CLOUD' && navigator.onLine) {
+            try {
+                window.speechSynthesis?.cancel();
+                cloudAudioPlayer.pause();
+                const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es-419&q=${encodeURIComponent(textoLimpio)}`;
+                cloudAudioPlayer.src = url;
+                cloudAudioPlayer.playbackRate = Math.min(1.1, Math.max(0.8, vel + 0.05));
+                cloudAudioPlayer.play().catch(() => {
+                    // Si el navegador bloquea el stream externo, cae inmediatamente al motor local en español
+                    hablarConMotorLocal(textoLimpio, vel);
+                });
+                return;
+            } catch (err) {
+                hablarConMotorLocal(textoLimpio, vel);
+            }
+        } else {
+            hablarConMotorLocal(textoLimpio, vel);
+        }
     };
 
     function leerFraseConResaltado(texto, cardHtml, vel = 0.88) {
         return new Promise((resolve) => {
-            if (!window.speechSynthesis) return resolve();
-            window.speechSynthesis.cancel();
-            setTimeout(() => {
-                const textoLimpio = texto.replace(/-/g, '');
-                const u = new SpeechSynthesisUtterance(textoLimpio);
-                const voz = obtenerMejorVoz();
-                if (voz) { u.voice = voz; u.lang = voz.lang; }
-                else { u.lang = 'es-PE'; }
-                u.rate = vel;
-                u.pitch = 1.0;
+            const textoLimpio = (texto || '').replace(/-/g, '');
+            const spansPalabra = cardHtml.querySelectorAll('.palabra');
+            spansPalabra.forEach(s => s.classList.remove('word-highlight'));
 
-                const spansPalabra = cardHtml.querySelectorAll('.palabra');
-                let indexActivo = 0;
+            // Animación sincronizada de resaltado palabra por palabra (funciona tanto en Nube como Offline en Android)
+            let indexActivo = 0;
+            const duracionPorPalabra = Math.max(380, Math.round(520 / vel));
+            const intervalo = setInterval(() => {
+                spansPalabra.forEach(s => s.classList.remove('word-highlight'));
+                if (spansPalabra[indexActivo]) {
+                    spansPalabra[indexActivo].classList.add('word-highlight');
+                    indexActivo++;
+                } else {
+                    clearInterval(intervalo);
+                }
+            }, duracionPorPalabra);
 
-                u.onboundary = (e) => {
-                    if (e.name === 'word') {
-                        spansPalabra.forEach(s => s.classList.remove('word-highlight'));
-                        if (spansPalabra[indexActivo]) spansPalabra[indexActivo].classList.add('word-highlight');
-                        indexActivo++;
-                    }
-                };
-                u.onend = () => {
-                    spansPalabra.forEach(s => s.classList.remove('word-highlight'));
-                    resolve();
-                };
-                u.onerror = () => {
-                    spansPalabra.forEach(s => s.classList.remove('word-highlight'));
-                    resolve();
-                };
-                window.speechSynthesis.speak(u);
-            }, 50);
+            const finalizar = () => {
+                clearInterval(intervalo);
+                spansPalabra.forEach(s => s.classList.remove('word-highlight'));
+                resolve();
+            };
+
+            if (AppState.state.vozPreferidaURI === 'AUTO_CLOUD' && navigator.onLine) {
+                window.speechSynthesis?.cancel();
+                cloudAudioPlayer.pause();
+                const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es-419&q=${encodeURIComponent(textoLimpio)}`;
+                cloudAudioPlayer.src = url;
+                cloudAudioPlayer.playbackRate = 0.95;
+                cloudAudioPlayer.onended = finalizar;
+                cloudAudioPlayer.onerror = () => hablarConMotorLocal(textoLimpio, vel, finalizar);
+                cloudAudioPlayer.play().catch(() => hablarConMotorLocal(textoLimpio, vel, finalizar));
+            } else {
+                hablarConMotorLocal(textoLimpio, vel, finalizar);
+            }
         });
     }
 
-    // --- CONTROLES DE NIVEL SIN RECARGAR PÁGINA ---
+    // --- CONTROLES DE NIVEL ---
     document.getElementById('btn-bajar-nivel')?.addEventListener('click', () => {
         if (AppState.state.nivelActual > 1) {
             AppState.update('nivelActual', AppState.state.nivelActual - 1);
@@ -304,24 +327,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- UTILIDADES DE UI ---
     function lanzarConfeti() {
         const fragment = document.createDocumentFragment();
         const colores = ['#ff7f50', '#bb86fc', '#00e676', '#ffeb3b', '#00bfff'];
-        
-        for(let i=0; i<50; i++) {
+        for(let i=0; i<45; i++) {
             let confeti = document.createElement('div');
             confeti.className = 'confeti';
             confeti.style.left = `${Math.random() * 100}vw`;
-            confeti.style.animationDuration = `${Math.random() * 2 + 1.8}s`;
+            confeti.style.animationDuration = `${Math.random() * 1.8 + 1.8}s`;
             confeti.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
             fragment.appendChild(confeti);
         }
-        
         document.body.appendChild(fragment);
-        setTimeout(() => {
-            document.querySelectorAll('.confeti').forEach(c => c.remove());
-        }, 3800); 
+        setTimeout(() => document.querySelectorAll('.confeti').forEach(c => c.remove()), 3500);
     }
 
     function toggleModal(modalElement, mostrar) {
@@ -335,14 +353,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- GUÍA VISUAL DE SÍLABA ACTUAL (Izquierda a Derecha) ---
     function actualizarFocoSilaba(card) {
         card.querySelectorAll('.silaba').forEach(s => s.classList.remove('silaba-foco'));
         const siguiente = card.querySelector('.silaba.no-leida');
         if (siguiente) siguiente.classList.add('silaba-foco');
     }
 
-    // --- INICIALIZACIÓN DE TARJETAS DEL FEED ---
     function inicializarTarjetas() {
         if (typeof frasesDatos === 'undefined') return;
         const nivel = AppState.state.nivelActual;
@@ -383,35 +399,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         DOM.feedContainer.innerHTML = htmlTarjetas;
         DOM.feedContainer.scrollTo({ top: 0 });
-        
-        // Iluminar la primera sílaba de cada tarjeta como guía visual
         document.querySelectorAll('.card').forEach(c => actualizarFocoSilaba(c));
         activarBotonesVoz();
         actualizarBarraProgreso();
     }
 
-    // --- LECTURA FONÉTICA NATURAL DE SÍLABAS + EFECTO KARAOKE INVERSO ---
+    // --- LECTURA DE SÍLABA SIN DELETREO ---
     window.leerSilaba = function(elementoHtml, silaba) {
-        // Mapa fonético con alargamiento vocálico suave para que el TTS de Android pronuncie la sílaba clara y natural
-        const dicFon = { 
-            "ma": "maa", "me": "mee", "mi": "mii", "mo": "moo", "mu": "muu",
-            "pa": "paa", "pe": "pee", "pi": "pii", "po": "poo", "pu": "puu",
-            "sa": "saa", "se": "see", "si": "sii", "so": "soo", "su": "suu",
-            "la": "laa", "le": "lee", "li": "lii", "lo": "loo", "lu": "luu",
-            "ta": "taa", "te": "tee", "ti": "tii", "to": "too", "tu": "tuu",
-            "da": "daa", "de": "dee", "di": "dii", "do": "doo", "du": "duu",
-            "na": "naa", "ne": "nee", "ni": "nii", "no": "noo", "nu": "nuu",
-            "ca": "kaa", "co": "koo", "cu": "kuu", "que": "kee", "qui": "kii",
-            "ba": "baa", "be": "bee", "bi": "bii", "bo": "boo", "bu": "buu",
-            "va": "baa", "ve": "bee", "vi": "bii", "vo": "boo", "vu": "buu",
-            "ga": "gaa", "go": "goo", "gu": "guu", "ja": "jaa", "je": "jee", "ji": "jii", "jo": "joo", "ju": "juu",
-            "ra": "raa", "re": "ree", "ri": "rii", "ro": "roo", "ru": "ruu",
-            "el": "él", "un": "un", "es": "es", "crush": "crash", "pov": "pof"
-        };
-        let limpia = silaba.toLowerCase().replace(/[.,!¡?¿]/g, '');
-        let silAudio = dicFon[limpia] || limpia;
-        
-        window.leerTextoSimple(silAudio, 0.82);
+        const silabaFonetica = window.convertirSilabaAFonetica(silaba);
+        window.leerTextoSimple(silabaFonetica, 0.85);
         
         if (elementoHtml.classList.contains('no-leida')) {
             elementoHtml.classList.replace('no-leida', 'leida');
@@ -420,14 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const palabraContenedor = elementoHtml.closest('.palabra');
             const card = elementoHtml.closest('.card');
 
-            // EFECTO KARAOKE INVERSO: Si terminó todas las sílabas de esta palabra, ocultar guiones y unir la palabra
             if (palabraContenedor && palabraContenedor.querySelectorAll('.no-leida').length === 0) {
                 palabraContenedor.classList.add('palabra-unida');
             }
 
             actualizarFocoSilaba(card);
             
-            // Si completó todas las sílabas de la tarjeta
             if (card.querySelectorAll('.no-leida').length === 0 && !card.classList.contains('completada')) {
                 completarTarjeta(card);
             }
@@ -449,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             leerFraseConResaltado(fraseCompleta, card, 0.9).then(() => verificarSubidaDeNivel(card));
-        }, 550);
+        }, 650);
 
         let oldBtn = btnCont.querySelector('.full-phrase-btn');
         if (oldBtn) {
@@ -479,11 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function verificarSubidaDeNivel(card) {
         const nivel = AppState.state.nivelActual;
         let nivelTarjeta = parseInt(card.getAttribute('data-nivel'));
-        
         if (nivelTarjeta === nivel) {
             let total = document.querySelectorAll(`.card[data-nivel="${nivel}"]`).length;
             let compl = document.querySelectorAll(`.card[data-nivel="${nivel}"].completada`).length;
-            
             if (total > 0 && total === compl) {
                 setTimeout(() => {
                     toggleModal(DOM.modales.nivel, true);
@@ -493,14 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Botón "Todavía no, seguir practicando" del modal de nivel (Bug corregido)
-    document.getElementById('btn-no-nivel')?.addEventListener('click', () => {
-        toggleModal(DOM.modales.nivel, false);
-    });
+    document.getElementById('btn-no-nivel')?.addEventListener('click', () => toggleModal(DOM.modales.nivel, false));
 
     inicializarTarjetas();
 
-    // --- EVENTOS DE NAVEGACIÓN Y MENÚS ---
+    // --- NAVEGACIÓN ---
     document.getElementById('btn-home')?.addEventListener('click', () => DOM.feedContainer.scrollTo({top: 0, behavior: 'smooth'}));
     document.getElementById('btn-jugar')?.addEventListener('click', () => toggleModal(DOM.modales.menuJuegos, true));
     document.getElementById('btn-cerrar-menu-juegos')?.addEventListener('click', () => toggleModal(DOM.modales.menuJuegos, false));
@@ -515,17 +504,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-cerrar-glosario')?.addEventListener('click', () => toggleModal(DOM.modales.glosario, false));
 
-    // --- ONBOARDING Y UI FLOTANTE ---
     const onboarding = document.getElementById('onboarding');
     if (localStorage.getItem('onboardingVisto') === 'true') { 
         if(onboarding) onboarding.style.display = 'none'; 
     }
     document.getElementById('btn-empezar')?.addEventListener('click', () => {
-        if (window.speechSynthesis) {
-            let vozMuda = new SpeechSynthesisUtterance('');
-            vozMuda.volume = 0;
-            window.speechSynthesis.speak(vozMuda);
-        }
         onboarding.classList.add('oculto');
         localStorage.setItem('onboardingVisto', 'true'); 
         setTimeout(() => window.leerTextoSimple(`Bienvenida al Nivel ${AppState.state.nivelActual}. Toca cada sílaba para leer.`, 0.9), 300); 
@@ -534,13 +517,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-leer-ui')?.addEventListener('click', (e) => {
         let targets = document.querySelectorAll('.meme-modal.active .leer-ui-target');
-        let textoLeido = Array.from(targets).map(t => t.innerText).join('. ') || "Toca las sílabas iluminadas de izquierda a derecha para armar la frase.";
+        let textoLeido = Array.from(targets).map(t => t.innerText).join('. ') || "Toca las sílabas iluminadas de izquierda a derecha para leer la frase.";
         e.target.classList.add('tts-activo');
         window.leerTextoSimple(textoLeido, 0.9);
         setTimeout(() => e.target.classList.remove('tts-activo'), 2000);
     });
 
-    // --- PANEL ADMIN SECRETO (5 toques en el saludo) ---
+    // --- PANEL ADMIN ---
     let adminTaps = 0;
     document.getElementById('admin-trigger')?.addEventListener('click', () => {
         adminTaps++;
@@ -554,11 +537,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     DOM.selectVozAdmin?.addEventListener('change', (e) => {
         AppState.update('vozPreferidaURI', e.target.value);
-        window.leerTextoSimple("Hola, esta es mi nueva voz para practicar.", 0.9);
+        window.leerTextoSimple("Hola, esta es mi voz en español para practicar contigo.", 0.9);
     });
 
     document.getElementById('btn-probar-voz')?.addEventListener('click', () => {
-        window.leerTextoSimple("¡Qué chévere! Vas a aprender a leer súper rápido.", 0.9);
+        window.leerTextoSimple("Probando sílabas: má, pé, sí, ló, tú. ¡Suena muy claro!", 0.88);
     });
     
     document.getElementById('btn-guardar-admin')?.addEventListener('click', () => {
@@ -585,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-cerrar-admin')?.addEventListener('click', () => toggleModal(DOM.modales.admin, false));
 
-    // --- EXPORTAR API PARA LOS MINIJUEGOS ---
     window.AppJuegosAPI = {
         estado: AppState,
         audio: AudioUI,
@@ -599,7 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!actuales.includes(palabra)) {
                 const nuevas = [...actuales, palabra];
                 AppState.update('palabrasDominadas', nuevas);
-                // Recompensa de Escudo cada 5 palabras dominadas
                 if (nuevas.length % 5 === 0 && !AppState.state.tieneEscudo) {
                     AppState.update('tieneEscudo', true);
                     window.mostrarMensaje("¡Ganaste un Escudo Protector de Racha! 🛡️", "info");

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lee-tiktok-v7.0';
+const CACHE_NAME = 'lee-tiktok-v7.1';
 const ASSETS_OFFLINE = [
     './',
     './index.html',
