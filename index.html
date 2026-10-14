@@ -16,7 +16,7 @@
     <div id="onboarding" class="onboarding-overlay">
         <div class="onboarding-content leer-ui-target">
             <h1 style="text-shadow: 0 0 20px var(--accent-purple);">Lee Tiktok 📱</h1>
-            <p>Lee las frases, atrapa el ritmo y no rompas tu racha.</p>
+            <p style="margin: 15px 0 25px; color: var(--text-dim); font-size: 1.1rem;">Lee las frases a tu ritmo, desbloquea retos y mantén tu racha encendida.</p>
             <button id="btn-empezar" class="start-btn" style="width: 100%;">¡Empezar!</button>
         </div>
     </div>
@@ -26,14 +26,19 @@
             <div class="header-top-row">
                 <div class="user-info" id="admin-trigger">
                     <span class="user-greeting" id="greeting">¡Hola! <span id="mascota">🥚</span></span>
-                    <div class="coin-display">
+                </div>
+                <div class="stats-row">
+                    <div class="coin-display" title="Racha de días">
                         🔥 <span id="streak">0</span>
+                    </div>
+                    <div id="escudo-badge" class="shield-display hidden" title="Escudo protector activo">
+                        🛡️
                     </div>
                 </div>
             </div>
             <div class="progress-container"><div class="progress-bar" id="level-progress-bar"></div></div>
             
-            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 0.95rem; color: var(--text-dim); margin-top: 15px;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 0.95rem; color: var(--text-dim); margin-top: 12px;">
                 <button id="btn-bajar-nivel" class="nav-nivel-btn">◀</button>
                 <span>Nivel: <strong id="display-nivel" style="color: var(--accent-purple); font-size: 1.3rem;">1</strong></span>
                 <button id="btn-subir-nivel" class="nav-nivel-btn">▶</button>
@@ -48,109 +53,179 @@
             <button class="nav-btn" id="btn-glosario">🏆<span>Logros</span></button>
         </nav>
 
+        <!-- MENÚ DE MINIJUEGOS -->
         <div id="modal-menu-juegos" class="meme-modal hidden" style="z-index: 2500;">
             <div class="store-content leer-ui-target">
-                <h2 style="color: var(--accent-purple); margin-bottom: 20px;">Minijuegos</h2>
-                <button id="btn-abrir-letras" class="start-btn" style="width: 100%; margin-bottom: 12px;">🅰️ Abecedario</button>
-                <button id="btn-abrir-swipe" class="start-btn" style="width: 100%; margin-bottom: 12px;">👈 Swipe Falso</button>
-                <button id="btn-abrir-escritura" class="start-btn" style="width: 100%; margin-bottom: 12px;">✍️ Escritura y Voz</button>
+                <h2 style="color: var(--accent-purple); margin-bottom: 20px;">Zona de Práctica 🎮</h2>
+                <button id="btn-abrir-letras" class="start-btn" style="width: 100%; margin-bottom: 12px;">🅰️ Sonidos y Letras</button>
+                <button id="btn-abrir-silabas" class="start-btn" style="width: 100%; margin-bottom: 12px; background: linear-gradient(90deg, #bb86fc, #00bfff);">🔊 Cazador de Sílabas</button>
+                <button id="btn-abrir-swipe" class="start-btn" style="width: 100%; margin-bottom: 12px;">👈 Swipe: ¿Real o Falsa?</button>
+                <button id="btn-abrir-escritura" class="start-btn" style="width: 100%; margin-bottom: 12px;">✍️ Arma y Escribe</button>
                 <button id="btn-abrir-memorama" class="start-btn" style="width: 100%; margin-bottom: 12px; background: linear-gradient(90deg, #ff9100, #ff1744);">🃏 Memorama</button>
-                <button id="btn-abrir-oraciones" class="start-btn" style="width: 100%; margin-bottom: 12px; background: linear-gradient(90deg, #00e676, #18ffff); color: #000;">🧩 Oraciones</button>
-                <button id="btn-cerrar-menu-juegos" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Volver</button>
+                <button id="btn-abrir-oraciones" class="start-btn" style="width: 100%; margin-bottom: 12px; background: linear-gradient(90deg, #00e676, #18ffff); color: #000;">🧩 Ordena la Frase</button>
+                <button id="btn-cerrar-menu-juegos" class="full-phrase-btn" style="margin-top: 10px; width: 100%;">Volver</button>
             </div>
         </div>
 
+        <!-- GLOSARIO / LOGROS -->
         <div id="modal-glosario" class="meme-modal hidden" style="z-index: 2000;">
             <div class="store-content leer-ui-target">
-                <h2 style="color: #ffeb3b; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255,235,59,0.5);">La Bóveda 🏆</h2>
-                <p style="color: var(--text-dim); margin-bottom: 15px;">Palabras dominadas: <span id="contador-glosario" style="color: white; font-weight: bold;">0</span></p>
+                <h2 style="color: #ffeb3b; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,235,59,0.5);">La Bóveda 🏆</h2>
+                <p style="color: var(--text-dim); margin-bottom: 8px;">Palabras dominadas: <span id="contador-glosario" style="color: white; font-weight: bold;">0</span></p>
+                <p style="color: var(--accent-coral); font-size: 0.8rem; margin-bottom: 15px;">🛡️ Ganas 1 Escudo de racha cada 5 palabras</p>
                 <div id="grid-glosario" class="glosario-grid"></div>
                 <button id="btn-cerrar-glosario" class="start-btn" style="margin-top: 20px; width: 100%;">Volver</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: ORACIONES -->
         <div id="minijuego-oraciones" class="meme-modal hidden" style="z-index: 3000;">
             <div class="swipe-container leer-ui-target" style="width: 95%;">
-                <h2 style="color: var(--accent-purple); margin-bottom: 10px; text-align: center;" id="titulo-oraciones">Arma la frase</h2>
+                <h2 style="color: var(--accent-purple); margin-bottom: 8px; text-align: center;" id="titulo-oraciones">Arma la frase</h2>
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <button id="btn-escuchar-oracion" class="icon-circle-btn" title="Escuchar frase">🔊</button>
+                </div>
                 <div id="zona-construccion" class="zona-drop"></div>
                 <div id="zona-bloques" class="zona-bloques"></div>
                 <button id="btn-verificar-oracion" class="start-btn" style="width: 100%; margin-top: 15px;">Verificar</button>
-                <button id="btn-cerrar-oraciones" class="full-phrase-btn" style="margin-top: 20px; width: 100%;">Salir</button>
+                <button id="btn-cerrar-oraciones" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Salir</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: MEMORAMA -->
         <div id="minijuego-memorama" class="meme-modal hidden" style="z-index: 3000;">
             <div class="swipe-container leer-ui-target" style="width: 95%;">
                 <h2 style="color: var(--accent-purple); margin-bottom: 5px; text-align: center;">Memorama</h2>
                 <h3 id="ronda-memorama" style="color: var(--accent-coral); text-align: center; margin-bottom: 20px;">Ronda 1</h3>
                 <div id="grid-memorama" class="memorama-grid"></div>
-                <button id="btn-cerrar-memorama" class="full-phrase-btn" style="margin-top: 30px; width: 100%;">Salir</button>
+                <button id="btn-cerrar-memorama" class="full-phrase-btn" style="margin-top: 25px; width: 100%;">Salir</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: CAZADOR DE SÍLABAS -->
+        <div id="minijuego-silabas" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="swipe-container leer-ui-target" style="width: 90%; display: flex; flex-direction: column; align-items: center;">
+                <h2 style="color: var(--accent-purple); margin-bottom: 20px; text-align: center;" id="titulo-silabas">Escucha y busca la sílaba</h2>
+                <div id="contenedor-opciones-silabas" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-bottom: 25px;"></div>
+                <button id="btn-escuchar-silaba-juego" class="icon-circle-btn-lg">🔊</button>
+                <button id="btn-cerrar-silabas" class="full-phrase-btn" style="margin-top: 25px; width: 100%;">Salir</button>
+            </div>
+        </div>
+        
+        <!-- PANEL ADMIN SECRETO (5 toques en el saludo) -->
         <div id="modal-admin" class="meme-modal hidden" style="z-index: 9999;">
             <div class="store-content">
-                <h2 style="color: #d50000; margin-bottom: 15px;">Panel Secreto 🤫</h2>
-                <input type="text" id="admin-palabra" class="escritura-input" placeholder="Nueva palabra..." style="margin-bottom: 10px;">
-                <input type="text" id="admin-emoji" class="escritura-input" placeholder="Emoji..." style="margin-bottom: 15px;">
-                <button id="btn-guardar-admin" class="start-btn" style="width: 100%;">Guardar Palabra</button>
+                <h2 style="color: var(--accent-coral); margin-bottom: 15px;">Configuración y Admin ⚙️</h2>
+                
+                <label style="display: block; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px;">Voz del lector (Android/Sistema):</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <select id="select-voz-admin" class="escritura-input" style="font-size: 0.95rem; padding: 10px; flex: 1;"></select>
+                    <button id="btn-probar-voz" class="buy-btn" style="padding: 10px 14px;">🔊</button>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 15px;">
+
+                <label style="display: block; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px;">Agregar palabra personalizada:</label>
+                <input type="text" id="admin-palabra" class="escritura-input" placeholder="Ej: ca-mi-sa (con guiones)" style="margin-bottom: 10px; font-size: 1.1rem; padding: 12px;">
+                <input type="text" id="admin-emoji" class="escritura-input" placeholder="Emoji (Ej: 👕)" style="margin-bottom: 15px; font-size: 1.1rem; padding: 12px;">
+                <button id="btn-guardar-admin" class="start-btn" style="width: 100%; padding: 12px;">Guardar Palabra</button>
                 <button id="btn-cerrar-admin" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Cerrar</button>
             </div>
         </div>
 
-        <div id="modal-nivel" class="meme-modal hidden" style="z-index: 4000;"><div class="store-content"><div style="font-size: 4.5rem; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">🏆</div><h2 style="color: var(--accent-coral); margin-bottom: 15px;">¡Nivel Dominado!</h2><button id="btn-si-nivel" class="start-btn" style="width: 100%; margin-bottom: 10px;">Iniciar examen 📝</button><button id="btn-no-nivel" class="full-phrase-btn" style="width: 100%;">No, repasar</button></div></div>
+        <!-- MODAL NIVEL COMPLETADO -->
+        <div id="modal-nivel" class="meme-modal hidden" style="z-index: 4000;">
+            <div class="store-content">
+                <div style="font-size: 4.5rem; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">🏆</div>
+                <h2 style="color: var(--accent-coral); margin-bottom: 10px;">¡Tarjetas Completadas!</h2>
+                <p style="color: var(--text-dim); margin-bottom: 20px;">¿Lista para el reto de 3 palabras para subir de nivel?</p>
+                <button id="btn-si-nivel" class="start-btn" style="width: 100%; margin-bottom: 10px;">¡Sí, ir al reto! 🔥</button>
+                <button id="btn-no-nivel" class="full-phrase-btn" style="width: 100%;">Todavía no, seguir practicando</button>
+            </div>
+        </div>
         
+        <!-- MODAL RETO DE NIVEL (EX JEFE FINAL, SIN RELOJ ESTRESANTE) -->
         <div id="modal-examen" class="meme-modal hidden" style="z-index: 5000;">
-            <div class="swipe-container" style="width: 90%;">
-                <h2 style="color: white; text-align: center; text-shadow: 0 0 10px red;">Jefe Final Nivel <span id="examen-nivel-texto"></span></h2>
-                <h3 id="timer-jefe" style="color: #ff1744; text-align: center; margin-bottom: 10px; font-size: 1.5rem;">⏱️ 30s</h3>
-                <p style="color: var(--text-main); margin-bottom: 15px; font-weight: bold; text-align: center;">Batalla decisiva</p>
-                <div id="tarjeta-examen" class="swipe-card" style="height: auto; padding: 30px 20px; flex-direction: column; border-color: red;">
-                    <div id="imagen-examen" style="font-size: 6rem; margin-bottom: 15px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">❓</div>
-                    <input type="text" id="input-examen" class="escritura-input" placeholder="Ataca..." autocomplete="off">
-                    <button id="btn-verificar-examen" class="start-btn" style="width: 100%; margin-top: 15px; background: #d50000;">Atacar ⚔️</button>
+            <div class="swipe-container" style="width: 92%;">
+                <h2 style="color: white; text-align: center; text-shadow: 0 0 10px var(--accent-purple);">Reto de Nivel <span id="examen-nivel-texto">1</span></h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 15px; padding: 0 10px;">
+                    <span id="progreso-jefe" style="color: var(--accent-coral); font-weight: bold;">Palabra 1 de 3</span>
+                    <span id="vidas-jefe" style="font-size: 1.3rem;">❤️❤️❤️</span>
                 </div>
+                <div id="tarjeta-examen" class="swipe-card" style="width: 100%; height: auto; padding: 25px 15px; flex-direction: column; border-color: var(--accent-purple);">
+                    <div id="imagen-examen" style="font-size: 5rem; margin-bottom: 10px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));">❓</div>
+                    <button id="btn-audio-examen" class="icon-circle-btn" style="margin-bottom: 15px;">🔊</button>
+                    
+                    <!-- Modo bloques de sílabas para niveles 1 y 2 -->
+                    <div id="examen-modo-bloques" style="width: 100%;">
+                        <div id="examen-respuesta-bloques" class="zona-drop" style="min-height: 65px; margin-bottom: 12px; padding: 10px;"></div>
+                        <div id="examen-opciones-bloques" class="zona-bloques" style="margin-bottom: 10px;"></div>
+                    </div>
+
+                    <!-- Modo teclado para niveles 3 y 4 -->
+                    <input type="text" id="input-examen" class="escritura-input hidden" placeholder="Escribe la palabra..." autocomplete="off">
+                    
+                    <button id="btn-verificar-examen" class="start-btn" style="width: 100%; margin-top: 15px;">Comprobar ✨</button>
+                </div>
+                <button id="btn-salir-examen" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Salir del reto</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: SWIPE -->
         <div id="minijuego-modal" class="meme-modal hidden" style="z-index: 3000;">
             <div class="swipe-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-                <h2 style="color: var(--accent-purple); margin-bottom: 20px;" id="titulo-swipe">¿Existe esta palabra?</h2>
-                <div id="tarjeta-swipe" class="swipe-card"><span id="palabra-swipe"></span></div>
-                <div class="swipe-instructions"><span style="color: #ff1744;">⬅️ Falsa</span><span style="color: #00e676;">Real ➡️</span></div>
-                <button id="btn-cerrar-minijuego" class="full-phrase-btn" style="margin-top: 40px; width: 80%;">Salir</button>
+                <h2 style="color: var(--accent-purple); margin-bottom: 15px; text-align: center;" id="titulo-swipe">¿Existe esta palabra?</h2>
+                <div id="tarjeta-swipe" class="swipe-card">
+                    <span id="palabra-swipe"></span>
+                </div>
+                <div class="swipe-instructions">
+                    <button id="btn-swipe-falsa" class="swipe-action-btn falsa">⬅️ No existe</button>
+                    <button id="btn-swipe-real" class="swipe-action-btn real">Sí existe ➡️</button>
+                </div>
+                <button id="btn-cerrar-minijuego" class="full-phrase-btn" style="margin-top: 25px; width: 85%;">Salir</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: ESCRITURA Y ARMADO DE PALABRAS -->
         <div id="minijuego-escritura" class="meme-modal hidden" style="z-index: 3000;">
-            <div class="swipe-container" style="width: 90%; display: flex; flex-direction: column; align-items: center;">
-                <h2 style="color: var(--accent-purple); margin-bottom: 20px;" id="titulo-escritura">¿Qué ves aquí?</h2>
-                <div id="tarjeta-escritura" class="swipe-card" style="height: auto; padding: 25px; flex-direction: column;">
-                    <div id="imagen-leer" style="font-size: 5.5rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));">⚽</div>
-                    <div style="display: flex; gap: 15px; margin: 15px 0;">
-                        <button id="btn-escuchar-palabra" style="background: rgba(187,134,252,0.2); border: 1px solid var(--accent-purple); border-radius: 50%; width: 50px; height: 50px; font-size: 1.3rem; transition: transform 0.2s;">🔊</button>
-                        <button id="btn-dictar-voz" style="background: rgba(0,230,118,0.2); border: 1px solid #00e676; border-radius: 50%; width: 50px; height: 50px; font-size: 1.3rem; transition: transform 0.2s;">🎙️</button>
+            <div class="swipe-container" style="width: 92%; display: flex; flex-direction: column; align-items: center;">
+                <h2 style="color: var(--accent-purple); margin-bottom: 15px; text-align: center;" id="titulo-escritura">¿Qué ves aquí?</h2>
+                <div id="tarjeta-escritura" class="swipe-card" style="width: 100%; height: auto; padding: 20px; flex-direction: column;">
+                    <div id="imagen-leer" style="font-size: 5rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));">⚽</div>
+                    <div style="display: flex; gap: 15px; margin: 12px 0;">
+                        <button id="btn-escuchar-palabra" class="icon-circle-btn" title="Escuchar palabra">🔊</button>
+                        <button id="btn-dictar-voz" class="icon-circle-btn mic" title="Hablar por micrófono">🎙️</button>
                     </div>
-                    <input type="text" id="input-escritura" class="escritura-input" placeholder="Escribe...">
+
+                    <!-- Contenedor de sílabas tocables (Andamiaje Niveles 1 y 2) -->
+                    <div id="escritura-modo-bloques" style="width: 100%;">
+                        <div id="escritura-respuesta-bloques" class="zona-drop" style="min-height: 65px; margin-bottom: 12px; padding: 10px;"></div>
+                        <div id="escritura-opciones-bloques" class="zona-bloques" style="margin-bottom: 10px;"></div>
+                    </div>
+
+                    <!-- Input de texto libre (Niveles 3 y 4) -->
+                    <input type="text" id="input-escritura" class="escritura-input hidden" placeholder="Escribe o usa 🎙️..." autocomplete="off">
+                    
                     <button id="btn-verificar-escritura" class="start-btn" style="width: 100%; margin-top: 15px;">Verificar</button>
                 </div>
-                <button id="btn-cerrar-escritura" class="full-phrase-btn" style="margin-top: 20px; width: 100%;">Salir</button>
+                <button id="btn-cerrar-escritura" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Salir</button>
             </div>
         </div>
 
+        <!-- MINIJUEGO: SONIDOS Y LETRAS -->
         <div id="minijuego-letras" class="meme-modal hidden" style="z-index: 3000;">
             <div class="swipe-container" style="width: 90%; display: flex; flex-direction: column; align-items: center;">
-                <h2 style="color: var(--accent-purple); margin-bottom: 20px;" id="titulo-letras">¿Cuál es...?</h2>
+                <h2 style="color: var(--accent-purple); margin-bottom: 8px; text-align: center;" id="titulo-letras">Escucha el sonido</h2>
+                <p id="pista-letras" style="color: var(--text-dim); margin-bottom: 20px; text-align: center; font-size: 1rem;">Toca el parlante para volver a escuchar</p>
                 <div id="contenedor-opciones-letras" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-bottom: 25px;"></div>
-                <button id="btn-escuchar-letra-juego" style="background: rgba(187,134,252,0.2); border: 1px solid var(--accent-purple); border-radius: 50%; width: 65px; height: 65px; font-size: 1.8rem; box-shadow: 0 5px 15px rgba(187,134,252,0.3);">🔊</button>
+                <button id="btn-escuchar-letra-juego" class="icon-circle-btn-lg">🔊</button>
                 <button id="btn-cerrar-letras" class="full-phrase-btn" style="margin-top: 25px; width: 100%;">Salir</button>
             </div>
         </div>
-        
-        <div id="meme-modal" class="meme-modal hidden" style="z-index: 9999;"><div class="meme-content"><img id="meme-img" src="" alt="Meme"></div></div>
     </div>
     
-    <script src="datos.js"></script>
-    <script src="app.js"></script>
+    <script src="datos.js" defer></script>
+    <script src="app.js" defer></script>
+    <script src="juegos.js" defer></script>
 </body>
 </html>

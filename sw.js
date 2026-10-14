@@ -1,15 +1,31 @@
-const CACHE_NAME = 'lee-tiktok-v6.6';
+const CACHE_NAME = 'lee-tiktok-v7.0';
+const ASSETS_OFFLINE = [
+    './',
+    './index.html',
+    './style.css',
+    './datos.js',
+    './app.js',
+    './juegos.js',
+    './manifest.json',
+    './icon.png',
+    './victoria.mp3',
+    './error.mp3'
+];
 
 self.addEventListener('install', (event) => {
-    // Instala inmediatamente el nuevo Service Worker
     self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            // Guardamos cada archivo individualmente para que si uno opcional falla no rompa el resto
+            return Promise.allSettled(
+                ASSETS_OFFLINE.map(url => cache.add(url))
+            );
+        })
+    );
 });
 
 self.addEventListener('activate', (event) => {
-    // Toma el control de la app al instante
     event.waitUntil(self.clients.claim());
-    
-    // Borra CUALQUIER caché vieja para obligar a descargar tu código nuevo
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -26,7 +42,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    // Estrategia Red Primero: Siempre busca tus cambios más recientes
     event.respondWith(
         fetch(event.request)
             .then((response) => {
@@ -37,7 +52,6 @@ self.addEventListener('fetch', (event) => {
                 return response;
             })
             .catch(() => {
-                // Solo si no hay internet (offline), carga lo guardado
                 return caches.match(event.request);
             })
     );
