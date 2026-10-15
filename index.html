@@ -1,170 +1,358 @@
-// --- DICCIONARIO FONÉTICO ANTIDELETREO PARA TTS EN ESPAÑOL ---
-// Al usar tilde y punto final, cualquier motor de voz lee la sílaba de un solo golpe sin deletrear "p-a"
-const FonoSilabas = {
-    "a": "á.", "e": "é.", "i": "í.", "o": "ó.", "u": "ú.",
-    "ma": "má.", "me": "mé.", "mi": "mí.", "mo": "mó.", "mu": "mú.",
-    "pa": "pá.", "pe": "pé.", "pi": "pí.", "po": "pó.", "pu": "pú.",
-    "sa": "sá.", "se": "sé.", "si": "sí.", "so": "só.", "su": "sú.",
-    "la": "lá.", "le": "lé.", "li": "lí.", "lo": "ló.", "lu": "lú.",
-    "ta": "tá.", "te": "té.", "ti": "tí.", "to": "tó.", "tu": "tú.",
-    "da": "dá.", "de": "dé.", "di": "dí.", "do": "dó.", "du": "dú.",
-    "na": "ná.", "ne": "né.", "ni": "ní.", "no": "nó.", "nu": "nú.",
-    "ca": "ká.", "co": "kó.", "cu": "kú.", "que": "ké.", "qui": "kí.",
-    "ba": "bá.", "be": "bé.", "bi": "bí.", "bo": "bó.", "bu": "bú.",
-    "va": "bá.", "ve": "bé.", "vi": "bí.", "vo": "bó.", "vu": "bú.",
-    "ga": "gá.", "go": "gó.", "gu": "gú.", "gue": "gué.", "gui": "guí.",
-    "ja": "já.", "je": "jé.", "ji": "jí.", "jo": "jó.", "ju": "jú.",
-    "ra": "rrá.", "re": "rré.", "ri": "rrí.", "ro": "rró.", "ru": "rrú.",
-    "rra": "rrá.", "rre": "rré.", "rri": "rrí.", "rro": "rró.", "rru": "rrú.",
-    "fa": "fá.", "fe": "fé.", "fi": "fí.", "fo": "fó.", "fu": "fú.",
-    "za": "sá.", "zo": "só.", "zu": "sú.", "ce": "sé.", "ci": "sí.",
-    "cha": "chá.", "che": "ché.", "chi": "chí.", "cho": "chó.", "chu": "chú.",
-    "lla": "yá.", "lle": "yé.", "lli": "yí.", "llo": "yó.", "llu": "yú.",
-    "ña": "ñá.", "ñe": "ñé.", "ñi": "ñí.", "ño": "ñó.", "ñu": "ñú.",
-    "ya": "yá.", "ye": "yé.", "yi": "yí.", "yo": "yó.", "yu": "yú.",
-    "bra": "brá.", "bre": "bré.", "bri": "brí.", "bro": "bró.", "bru": "brú.",
-    "cra": "krá.", "cre": "kré.", "cri": "krí.", "cro": "kró.", "cru": "krú.",
-    "dra": "drá.", "dre": "dré.", "dri": "drí.", "dro": "dró.", "dru": "drú.",
-    "fra": "frá.", "fre": "fré.", "fri": "frí.", "fro": "fró.", "fru": "frú.",
-    "gra": "grá.", "gre": "gré.", "gri": "grí.", "gro": "gró.", "gru": "grú.",
-    "pla": "plá.", "ple": "plé.", "pli": "plí.", "plo": "pló.", "plu": "plú.",
-    "pra": "prá.", "pre": "pré.", "pri": "prí.", "pro": "pró.", "pru": "prú.",
-    "tra": "trá.", "tre": "tré.", "tri": "trí.", "tro": "tró.", "tru": "trú.",
-    "blo": "bló.", "bla": "blá.", "ble": "blé.",
-    "pal": "pál.", "pan": "pán.", "cel": "sél.", "sol": "sól.", "mar": "már.",
-    "len": "lén.", "tes": "tés.", "can": "kán.", "cion": "sión.", "ción": "sión.",
-    "pas": "pás.", "tel": "tél.", "pos": "pós.", "fies": "fiés.", "cham": "chám.",
-    "crush": "crásh.", "pov": "póf."
-};
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lee TikTok</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090e">
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
 
-// --- BANCO DE FRASES PARA EL FEED PRINCIPAL ---
-const frasesDatos = [
-    // NIVEL 1: Sílabas directas
-    { "id": 1, "texto": "pa-sa la ta-za", "tipo": "reto", "iconoBoton": "☕", "nivel": 1 },
-    { "id": 2, "texto": "la so-pa es-tá ri-ca", "tipo": "comida", "iconoBoton": "🥣", "nivel": 1 },
-    { "id": 3, "texto": "su-be a tu ca-ma", "tipo": "reto", "iconoBoton": "🛏️", "nivel": 1 },
-    { "id": 4, "texto": "da-me la ma-no", "tipo": "amor", "iconoBoton": "🤝", "nivel": 1 },
-    { "id": 5, "texto": "to-ma tu ju-go", "tipo": "comida", "iconoBoton": "🧃", "nivel": 1 },
-    { "id": 101, "texto": "pa-pá me mi-ra", "tipo": "familia", "iconoBoton": "👀", "nivel": 1 },
-    { "id": 102, "texto": "yo ve-o un ga-to", "tipo": "animales", "iconoBoton": "🐈", "nivel": 1 },
-    { "id": 103, "texto": "la mo-to su-be", "tipo": "vehiculo", "iconoBoton": "🏍️", "nivel": 1 },
-    { "id": 104, "texto": "da-me un be-so", "tipo": "amor", "iconoBoton": "😘", "nivel": 1 },
-    { "id": 105, "texto": "e-sa es mi me-sa", "tipo": "reto", "iconoBoton": "🪑", "nivel": 1 },
-    { "id": 106, "texto": "la lu-na ba-ja", "tipo": "reto", "iconoBoton": "🌙", "nivel": 1 },
-    { "id": 107, "texto": "pe-lo ro-jo", "tipo": "moda", "iconoBoton": "👩‍🦰", "nivel": 1 },
-    { "id": 108, "texto": "mi po-lo nue-vo", "tipo": "moda", "iconoBoton": "👕", "nivel": 1 },
+    <!-- ONBOARDING -->
+    <div id="onboarding" class="onboarding-overlay">
+        <div class="onboarding-card">
+            <div class="onboarding-logo">📱✨</div>
+            <h1>Lee TikTok</h1>
+            <p>Aprende a tu ritmo, desbloquea niveles y domina cada reto.</p>
+            <button id="btn-empezar" class="btn-primary-3d" style="width: 100%;">¡Empezar ahora!</button>
+        </div>
+    </div>
 
-    // NIVEL 2: Sílabas inversas, mixtas y MODO HISTORIA
-    { "id": 201, "historia": 1, "orden": 1, "texto": "ha-bí-a un pe-rro", "tipo": "cuento", "iconoBoton": "🐕", "nivel": 2 },
-    { "id": 202, "historia": 1, "orden": 2, "texto": "se co-mió mi pan", "tipo": "cuento", "iconoBoton": "🥖", "nivel": 2 },
-    { "id": 203, "historia": 1, "orden": 3, "texto": "y se fue co-rrien-do", "tipo": "cuento", "iconoBoton": "💨", "nivel": 2 },
-    { "id": 13, "texto": "qué pal-ta con él", "tipo": "broma", "iconoBoton": "🥑", "nivel": 2 },
-    { "id": 14, "texto": "pon el cel a-quí", "tipo": "reto", "iconoBoton": "📱", "nivel": 2 },
-    { "id": 15, "texto": "sal de a-hí", "tipo": "reto", "iconoBoton": "🏃‍♀️", "nivel": 2 },
-    { "id": 17, "texto": "pon la can-ción", "tipo": "cancion", "iconoBoton": "🎧", "nivel": 2 },
-    { "id": 18, "texto": "es-tás muy top", "tipo": "moda", "iconoBoton": "✨", "nivel": 2 },
-    { "id": 19, "texto": "fies-ta en la ca-sa", "tipo": "reto", "iconoBoton": "🎉", "nivel": 2 },
-    { "id": 20, "texto": "va-mos al ci-ne", "tipo": "salida", "iconoBoton": "🍿", "nivel": 2 },
+    <div class="app-container">
+        <!-- HEADER SUPERIOR -->
+        <header class="main-header">
+            <div class="header-top-row">
+                <div class="user-info" id="admin-trigger">
+                    <span class="user-avatar" id="mascota">🥚</span>
+                    <div>
+                        <span class="user-greeting">¡Hola, crack!</span>
+                        <span class="user-subtitle" id="rango-lectora">Lectora Inicial</span>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-pill streak-pill" title="Días de racha">
+                        🔥 <span id="streak">0</span>
+                    </div>
+                    <div id="escudo-badge" class="stat-pill shield-pill hidden" title="Escudo activo">
+                        🛡️
+                    </div>
+                </div>
+            </div>
 
-    // NIVEL 3: Sílabas Trabadas
-    { "id": 25, "texto": "gran pro-ble-ma", "tipo": "chisme", "iconoBoton": "😱", "nivel": 3 },
-    { "id": 26, "texto": "fra-se de a-mor", "tipo": "amor", "iconoBoton": "💌", "nivel": 3 },
-    { "id": 27, "texto": "bro-ma pe-sa-da", "tipo": "broma", "iconoBoton": "😂", "nivel": 3 },
-    { "id": 28, "texto": "com-pra za-pa-ti-llas", "tipo": "moda", "iconoBoton": "👟", "nivel": 3 },
-    { "id": 30, "texto": "el dra-gón ti-ra fue-go", "tipo": "reto", "iconoBoton": "🐉", "nivel": 3 },
-    { "id": 32, "texto": "me com-pré un pos-tre", "tipo": "comida", "iconoBoton": "🍰", "nivel": 3 },
-    { "id": 33, "texto": "blo-que-a a e-se chi-co", "tipo": "reto", "iconoBoton": "🚫", "nivel": 3 },
-    { "id": 34, "texto": "chi-ca con es-ti-lo", "tipo": "moda", "iconoBoton": "💅", "nivel": 3 },
+            <div class="level-bar-wrapper">
+                <button id="btn-bajar-nivel" class="nav-nivel-btn" title="Nivel anterior">◀</button>
+                <div class="level-center-info">
+                    <div class="level-title-row">
+                        <span>NIVEL <strong id="display-nivel">1</strong></span>
+                        <span id="progreso-texto-header">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="level-progress-bar"></div>
+                    </div>
+                </div>
+                <button id="btn-subir-nivel" class="nav-nivel-btn" title="Siguiente nivel">▶</button>
+            </div>
+        </header>
 
-    // NIVEL 4: Fluidez
-    { "id": 35, "texto": "Contexto por favor", "tipo": "tiktok", "iconoBoton": "🤔", "nivel": 4 },
-    { "id": 36, "texto": "Pov eres la mayor", "tipo": "tiktok", "iconoBoton": "👑", "nivel": 4 },
-    { "id": 37, "texto": "Storytime de cómo pasó", "tipo": "tiktok", "iconoBoton": "📖", "nivel": 4 },
-    { "id": 38, "texto": "Etiqueta a tu mejor amiga", "tipo": "tiktok", "iconoBoton": "👯‍♀️", "nivel": 4 },
-    { "id": 39, "texto": "Yo cuando veo a mi crush", "tipo": "tiktok", "iconoBoton": "😍", "nivel": 4 },
-    { "id": 41, "texto": "Mi primera chamba", "tipo": "tiktok", "iconoBoton": "👷‍♀️", "nivel": 4 },
-    { "id": 42, "texto": "Arréglate conmigo para salir", "tipo": "tiktok", "iconoBoton": "💄", "nivel": 4 }
-];
+        <!-- FEED ESTILO TIKTOK -->
+        <main class="feed" id="feed-container"></main>
 
-// --- BANCO DE PALABRAS PARA MINIJUEGOS ---
-const palabrasDatos = [
-    // NIVEL 1: Reales
-    { palabra: "Mamá", silabas: ["ma", "má"], correcta: true, nivel: 1, icono: "👩‍👧" },
-    { palabra: "Papá", silabas: ["pa", "pá"], correcta: true, nivel: 1, icono: "👨" },
-    { palabra: "Mesa", silabas: ["me", "sa"], correcta: true, nivel: 1, icono: "🪑" },
-    { palabra: "Mano", silabas: ["ma", "no"], correcta: true, nivel: 1, icono: "✋" },
-    { palabra: "Gato", silabas: ["ga", "to"], correcta: true, nivel: 1, icono: "🐈" },
-    { palabra: "Sopa", silabas: ["so", "pa"], correcta: true, nivel: 1, icono: "🥣" },
-    { palabra: "Luna", silabas: ["lu", "na"], correcta: true, nivel: 1, icono: "🌙" },
-    { palabra: "Taza", silabas: ["ta", "za"], correcta: true, nivel: 1, icono: "☕" },
-    { palabra: "Moto", silabas: ["mo", "to"], correcta: true, nivel: 1, icono: "🏍️" },
-    { palabra: "Jugo", silabas: ["ju", "go"], correcta: true, nivel: 1, icono: "🧃" },
-    { palabra: "Polo", silabas: ["po", "lo"], correcta: true, nivel: 1, icono: "👕" },
-    { palabra: "Beso", silabas: ["be", "so"], correcta: true, nivel: 1, icono: "😘" },
-    { palabra: "Pesa", silabas: ["pe", "sa"], correcta: true, nivel: 1, icono: "🏋️‍♀️" },
-    // NIVEL 1: Falsas (con el icono de la palabra que intentan imitar para que ella detecte el error ortográfico)
-    { palabra: "Mepa", silabas: ["me", "pa"], correcta: false, nivel: 1, icono: "🪑", realRef: "Mesa" },
-    { palabra: "Sato", silabas: ["sa", "to"], correcta: false, nivel: 1, icono: "🐈", realRef: "Gato" },
-    { palabra: "Luma", silabas: ["lu", "ma"], correcta: false, nivel: 1, icono: "🌙", realRef: "Luna" },
-    { palabra: "Topa", silabas: ["to", "pa"], correcta: false, nivel: 1, icono: "🥣", realRef: "Sopa" },
-    { palabra: "Namo", silabas: ["na", "mo"], correcta: false, nivel: 1, icono: "✋", realRef: "Mano" },
+        <!-- NAVEGACIÓN INFERIOR -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" id="btn-home">
+                <span class="nav-icon">🏠</span>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-btn" id="btn-jugar">
+                <span class="nav-icon">🎮</span>
+                <span>Juegos</span>
+            </button>
+            <button class="nav-btn" id="btn-glosario">
+                <span class="nav-icon">🏆</span>
+                <span>Bóveda</span>
+            </button>
+        </nav>
 
-    // NIVEL 2: Reales
-    { palabra: "Perro", silabas: ["pe", "rro"], correcta: true, nivel: 2, icono: "🐕" },
-    { palabra: "Palta", silabas: ["pal", "ta"], correcta: true, nivel: 2, icono: "🥑" },
-    { palabra: "Fiesta", silabas: ["fies", "ta"], correcta: true, nivel: 2, icono: "🎉" },
-    { palabra: "Lentes", silabas: ["len", "tes"], correcta: true, nivel: 2, icono: "🕶️" },
-    { palabra: "Celular", silabas: ["ce", "lu", "lar"], correcta: true, nivel: 2, icono: "📱" },
-    { palabra: "Canción", silabas: ["can", "ción"], correcta: true, nivel: 2, icono: "🎧" },
-    { palabra: "Pastel", silabas: ["pas", "tel"], correcta: true, nivel: 2, icono: "🎂" },
-    { palabra: "Árbol", silabas: ["ár", "bol"], correcta: true, nivel: 2, icono: "🌳" },
-    // NIVEL 2: Falsas
-    { palabra: "Pelta", silabas: ["pel", "ta"], correcta: false, nivel: 2, icono: "🥑", realRef: "Palta" },
-    { palabra: "Fosta", silabas: ["fos", "ta"], correcta: false, nivel: 2, icono: "🎉", realRef: "Fiesta" },
-    { palabra: "Lantes", silabas: ["lan", "tes"], correcta: false, nivel: 2, icono: "🕶️", realRef: "Lentes" },
+        <!-- =========================================================
+             MENÚ DE JUEGOS (HUB CENTRAL)
+        ========================================================== -->
+        <div id="modal-menu-juegos" class="meme-modal hidden" style="z-index: 2500;">
+            <div class="hub-container">
+                <div class="hub-header">
+                    <div>
+                        <h2>Zona Arcade 🎮</h2>
+                        <p>Elige un reto para practicar</p>
+                    </div>
+                    <button id="btn-cerrar-menu-juegos" class="btn-close-circle">✕</button>
+                </div>
 
-    // NIVEL 3: Reales
-    { palabra: "Postre", silabas: ["pos", "tre"], correcta: true, nivel: 3, icono: "🍰" },
-    { palabra: "Dragón", silabas: ["dra", "gón"], correcta: true, nivel: 3, icono: "🐉" },
-    { palabra: "Broma", silabas: ["bro", "ma"], correcta: true, nivel: 3, icono: "😂" },
-    { palabra: "Premio", silabas: ["pre", "mio"], correcta: true, nivel: 3, icono: "🏆" },
-    { palabra: "Estrella", silabas: ["es", "tre", "lla"], correcta: true, nivel: 3, icono: "⭐" },
-    { palabra: "Fresa", silabas: ["fre", "sa"], correcta: true, nivel: 3, icono: "🍓" },
-    { palabra: "Plátano", silabas: ["plá", "ta", "no"], correcta: true, nivel: 3, icono: "🍌" },
-    // NIVEL 3: Falsas
-    { palabra: "Prosta", silabas: ["pros", "ta"], correcta: false, nivel: 3, icono: "🍰", realRef: "Postre" },
-    { palabra: "Drogán", silabas: ["dro", "gán"], correcta: false, nivel: 3, icono: "🐉", realRef: "Dragón" },
+                <div class="juegos-grid-menu">
+                    <button id="btn-abrir-letras" class="game-card-btn card-cyan">
+                        <span class="game-card-tag">👂 Oído</span>
+                        <span class="game-card-icon">🅰️</span>
+                        <span class="game-card-title">Sonidos y Letras</span>
+                        <span class="game-card-desc">Escucha y une con la letra</span>
+                    </button>
 
-    // NIVEL 4: Reales
-    { palabra: "Amiga", silabas: ["a", "mi", "ga"], correcta: true, nivel: 4, icono: "👯‍♀️" },
-    { palabra: "Chamba", silabas: ["cham", "ba"], correcta: true, nivel: 4, icono: "👷‍♀️" },
-    { palabra: "Corona", silabas: ["co", "ro", "na"], correcta: true, nivel: 4, icono: "👑" },
-    { palabra: "Maquillaje", silabas: ["ma", "qui", "lla", "je"], correcta: true, nivel: 4, icono: "💄" },
-    { palabra: "Zapatillas", silabas: ["za", "pa", "ti", "llas"], correcta: true, nivel: 4, icono: "👟" },
-    { palabra: "Perfume", silabas: ["per", "fu", "me"], correcta: true, nivel: 4, icono: "✨" },
-    // NIVEL 4: Falsas
-    { palabra: "Chimbaña", silabas: ["chim", "ba", "ña"], correcta: false, nivel: 4, icono: "👷‍♀️", realRef: "Chamba" },
-    { palabra: "Zapatoca", silabas: ["za", "pa", "to", "ca"], correcta: false, nivel: 4, icono: "👟", realRef: "Zapatillas" }
-];
+                    <button id="btn-abrir-silabas" class="game-card-btn card-purple">
+                        <span class="game-card-tag">👂 Oído</span>
+                        <span class="game-card-icon">🧩</span>
+                        <span class="game-card-title">Falta una Sílaba</span>
+                        <span class="game-card-desc">Escucha y completa el hueco</span>
+                    </button>
 
-// --- FAMILIAS FONÉTICAS PARA EL JUEGO DE LETRAS (SIN CONSONANTES SUELTAS QUE SE LEAN EN INGLÉS) ---
-const fonemasLetras = [
-    { letra: "A", audio: "Vocal á. Como en Árbol y Amiga.", pista: "🌳 Árbol • 👯‍♀️ Amiga", familia: ["a"] },
-    { letra: "E", audio: "Vocal é. Como en Estrella.", pista: "⭐ Estrella • 🪞 Espejo", familia: ["e"] },
-    { letra: "I", audio: "Vocal í. Como en Isla.", pista: "🏝️ Isla • 🧲 Imán", familia: ["i"] },
-    { letra: "O", audio: "Vocal ó. Como en Oso.", pista: "🐻 Oso • 👀 Ojo", familia: ["o"] },
-    { letra: "U", audio: "Vocal ú. Como en Uva.", pista: "🍇 Uva • 💅 Uña", familia: ["u"] },
-    { letra: "M", audio: "La letra de: má, mé, mí, mó, mú. Como en Mamá y Mano.", pista: "✋ ma - me - mi - mo - mu", familia: ["ma", "me", "mi", "mo", "mu"] },
-    { letra: "P", audio: "La letra de: pá, pé, pí, pó, pú. Como en Papá y Polo.", pista: "👕 pa - pe - pi - po - pu", familia: ["pa", "pe", "pi", "po", "pu"] },
-    { letra: "S", audio: "La letra de: sá, sé, sí, só, sú. Como en Sopa y Sol.", pista: "🥣 sa - se - si - so - su", familia: ["sa", "se", "si", "so", "su"] },
-    { letra: "L", audio: "La letra de: lá, lé, lí, ló, lú. Como en Luna y Lentes.", pista: "🌙 la - le - li - lo - lu", familia: ["la", "le", "li", "lo", "lu"] },
-    { letra: "T", audio: "La letra de: tá, té, tí, tó, tú. Como en Taza y Moto.", pista: "☕ ta - te - ti - to - tu", familia: ["ta", "te", "ti", "to", "tu"] },
-    { letra: "D", audio: "La letra de: dá, dé, dí, dó, dú. Como en Dado y Dedo.", pista: "🎲 da - de - di - do - du", familia: ["da", "de", "di", "do", "du"] },
-    { letra: "N", audio: "La letra de: ná, né, ní, nó, nú. Como en Nube y Noche.", pista: "☁️ na - ne - ni - no - nu", familia: ["na", "ne", "ni", "no", "nu"] },
-    { letra: "B", audio: "La letra de: bá, bé, bí, bó, bú. Como en Beso y Bonito.", pista: "😘 ba - be - bi - bo - bu", familia: ["ba", "be", "bi", "bo", "bu"] },
-    { letra: "C", audio: "La letra de: ká, kó, kú. Como en Cama y Copa.", pista: "🛏️ ca - co - cu", familia: ["ca", "co", "cu"] },
-    { letra: "G", audio: "La letra de: gá, gó, gú. Como en Gato y Gota.", pista: "🐈 ga - go - gu", familia: ["ga", "go", "gu"] },
-    { letra: "J", audio: "La letra de: já, jé, jí, jó, jú. Como en Jugo y Joya.", pista: "🧃 ja - je - ji - jo - ju", familia: ["ja", "je", "ji", "jo", "ju"] },
-    { letra: "R", audio: "La letra de: rrá, rré, rrí, rró, rrú. Como en Rosa y Risa.", pista: "🌹 ra - re - ri - ro - ru", familia: ["ra", "re", "ri", "ro", "ru"] },
-    { letra: "F", audio: "La letra de: fá, fé, fí, fó, fú. Como en Fiesta y Foto.", pista: "🎉 fa - fe - fi - fo - fu", familia: ["fa", "fe", "fi", "fo", "fu"] }
-];
+                    <button id="btn-abrir-swipe" class="game-card-btn card-pink">
+                        <span class="game-card-tag">👀 Lectura</span>
+                        <span class="game-card-icon">👀</span>
+                        <span class="game-card-title">Ojo de Águila</span>
+                        <span class="game-card-desc">Lee sin audio: ¿Bien o mal escrita?</span>
+                    </button>
+
+                    <button id="btn-abrir-memorama" class="game-card-btn card-orange">
+                        <span class="game-card-tag">👀 Lectura</span>
+                        <span class="game-card-icon">🃏</span>
+                        <span class="game-card-title">Pares Lectores</span>
+                        <span class="game-card-desc">Lee en silencio y une con su dibujo</span>
+                    </button>
+
+                    <button id="btn-abrir-escritura" class="game-card-btn card-green">
+                        <span class="game-card-tag">✍️ Escritura</span>
+                        <span class="game-card-icon">✍️</span>
+                        <span class="game-card-title">Constructor</span>
+                        <span class="game-card-desc">Mira el dibujo y arma su nombre</span>
+                    </button>
+
+                    <button id="btn-abrir-oraciones" class="game-card-btn card-blue">
+                        <span class="game-card-tag">📖 Frases</span>
+                        <span class="game-card-icon">💬</span>
+                        <span class="game-card-title">Ordena la Frase</span>
+                        <span class="game-card-desc">Lee las palabras y dales sentido</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             GLOSARIO / BÓVEDA DE PALABRAS
+        ========================================================== -->
+        <div id="modal-glosario" class="meme-modal hidden" style="z-index: 2000;">
+            <div class="hub-container">
+                <div class="hub-header">
+                    <div>
+                        <h2 style="color: #ffd700;">Tu Bóveda 🏆</h2>
+                        <p>Palabras dominadas: <strong id="contador-glosario" style="color: white;">0</strong></p>
+                    </div>
+                    <button id="btn-cerrar-glosario" class="btn-close-circle">✕</button>
+                </div>
+                <div class="boveda-banner">
+                    🛡️ Ganas 1 Escudo Protector cada 5 palabras nuevas. Toca cualquier palabra para escuchar cómo se pronuncia.
+                </div>
+                <div id="grid-glosario" class="glosario-grid"></div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 1: SONIDOS Y LETRAS (CON AUDIO GUÍA)
+        ========================================================== -->
+        <div id="minijuego-letras" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-letras" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="ronda-letras-badge">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill ear-pill">👂 Juego de Oído</span>
+                    <h2 id="titulo-letras" class="game-main-title">Escucha y busca la letra</h2>
+                    <div id="pista-letras" class="game-sub-hint">Toca el parlante si quieres repetir</div>
+                    <button id="btn-escuchar-letra-juego" class="speaker-hero-btn" title="Repetir sonido">🔊</button>
+                    <div id="contenedor-opciones-letras" class="options-grid-2x2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 2: FALTA UNA SÍLABA (CON AUDIO DE LA SÍLABA FALTANTE)
+        ========================================================== -->
+        <div id="minijuego-silabas" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-silabas" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="ronda-silabas-badge">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill ear-pill">👂 Escucha qué sílaba falta</span>
+                    <div id="titulo-silabas" class="word-puzzle-card"></div>
+                    <button id="btn-escuchar-silaba-juego" class="speaker-mini-btn">🔊 Repetir sílaba</button>
+                    <div id="contenedor-opciones-silabas" class="options-grid-2x2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 3: OJO DE ÁGUILA / SWIPE (100% VISUAL SIN AUDIO SPOILER)
+        ========================================================== -->
+        <div id="minijuego-modal" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-minijuego" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="titulo-swipe">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill eye-pill">👀 Lee en silencio (Sin audio)</span>
+                    <p class="game-instruction">Mira el dibujo y lee las letras: ¿Está bien escrita?</p>
+                    <div id="tarjeta-swipe" class="swipe-card">
+                        <div id="palabra-swipe" style="width: 100%;"></div>
+                    </div>
+                    <div class="swipe-instructions">
+                        <button id="btn-swipe-falsa" class="swipe-action-btn falsa">❌ Mal escrita</button>
+                        <button id="btn-swipe-real" class="swipe-action-btn real">✅ Bien escrita</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 4: MEMORAMA / PARES LECTORES (100% VISUAL HASTA EL MATCH)
+        ========================================================== -->
+        <div id="minijuego-memorama" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-memorama" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="ronda-memorama">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill eye-pill">👀 Lectura Silenciosa</span>
+                    <p class="game-instruction">Lee cada palabra por ti misma y únela con su dibujo</p>
+                    <div id="grid-memorama" class="memorama-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 5: CONSTRUCTOR / ESCRITURA (MIRA EL DIBUJO Y ARMA SIN SPOILER)
+        ========================================================== -->
+        <div id="minijuego-escritura" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-escritura" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="titulo-escritura">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill eye-pill">✍️ Mira la imagen y escribe</span>
+                    <div id="tarjeta-escritura" class="builder-card">
+                        <div id="imagen-leer" class="builder-emoji">🐕</div>
+                        <div id="pista-nombre-escritura" class="builder-hint">¿Cómo se llama este dibujo?</div>
+
+                        <!-- Modo bloques de sílabas (Niveles 1 y 2) -->
+                        <div id="escritura-modo-bloques" style="width: 100%;">
+                            <div id="escritura-respuesta-bloques" class="slots-container"></div>
+                            <div id="escritura-opciones-bloques" class="zona-bloques"></div>
+                        </div>
+
+                        <!-- Modo teclado libre (Niveles 3 y 4) -->
+                        <input type="text" id="input-escritura" class="escritura-input hidden" placeholder="Escribe aquí..." autocomplete="off">
+                        
+                        <div class="builder-actions">
+                            <button id="btn-escuchar-palabra" class="btn-secondary-pill" title="Escuchar pista">💡 Ayuda de voz</button>
+                            <button id="btn-dictar-voz" class="btn-secondary-pill" title="Leer por micrófono">🎙️ Leer en voz alta</button>
+                        </div>
+
+                        <button id="btn-verificar-escritura" class="btn-primary-3d" style="width: 100%; margin-top: 12px;">Comprobar ✨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             JUEGO 6: ORDENA LA FRASE (LECTURA COMPRENSIVA SIN AUDIO SPOILER)
+        ========================================================== -->
+        <div id="minijuego-oraciones" class="meme-modal hidden" style="z-index: 3000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-cerrar-oraciones" class="btn-back-juegos">⬅ Juegos</button>
+                    <span class="game-combo-badge" id="titulo-oraciones">Ronda 1</span>
+                </div>
+                <div class="game-body">
+                    <span class="mode-pill eye-pill">📖 Lee y ordena la oración</span>
+                    <div id="emoji-contexto-oracion" style="font-size: 3.6rem; margin: 6px 0;">🥣</div>
+                    <p class="game-instruction">Toca las palabras en orden para que la frase tenga sentido</p>
+                    <div id="zona-construccion" class="zona-drop"></div>
+                    <div id="zona-bloques" class="zona-bloques"></div>
+                    <div style="display: flex; gap: 10px; width: 100%; margin-top: 16px;">
+                        <button id="btn-escuchar-oracion" class="btn-secondary-pill" style="flex: 0.45;">💡 Pista de voz</button>
+                        <button id="btn-verificar-oracion" class="btn-primary-3d" style="flex: 1;">Comprobar ✨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             PANEL ADMIN SECRETO (5 TOQUES EN EL SALUDO)
+        ========================================================== -->
+        <div id="modal-admin" class="meme-modal hidden" style="z-index: 9999;">
+            <div class="store-content">
+                <h2 style="color: var(--accent-coral); margin-bottom: 15px;">Panel Secreto ⚙️</h2>
+                
+                <label style="display: block; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px;">Motor de voz activo:</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <select id="select-voz-admin" class="escritura-input" style="font-size: 0.95rem; padding: 10px; flex: 1;"></select>
+                    <button id="btn-probar-voz" class="buy-btn" style="padding: 10px 14px;">🔊</button>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 15px;">
+
+                <label style="display: block; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px;">Agregar palabra nueva al juego:</label>
+                <input type="text" id="admin-palabra" class="escritura-input" placeholder="Ej: ca-mi-sa (con guiones)" style="margin-bottom: 10px; font-size: 1.05rem; padding: 12px;">
+                <input type="text" id="admin-emoji" class="escritura-input" placeholder="Emoji exacto (Ej: 👕)" style="margin-bottom: 15px; font-size: 1.05rem; padding: 12px;">
+                <button id="btn-guardar-admin" class="btn-primary-3d" style="width: 100%; padding: 12px;">Guardar Palabra</button>
+                <button id="btn-cerrar-admin" class="full-phrase-btn" style="margin-top: 15px; width: 100%;">Cerrar</button>
+            </div>
+        </div>
+
+        <!-- MODAL NIVEL COMPLETADO -->
+        <div id="modal-nivel" class="meme-modal hidden" style="z-index: 4000;">
+            <div class="store-content">
+                <div style="font-size: 4.5rem; margin-bottom: 10px;">🏆</div>
+                <h2 style="color: var(--accent-coral); margin-bottom: 10px;">¡Tarjetas Completadas!</h2>
+                <p style="color: var(--text-dim); margin-bottom: 20px;">Demuestra tu lectura sin ayuda en 3 palabras para desbloquear el siguiente nivel.</p>
+                <button id="btn-si-nivel" class="btn-primary-3d" style="width: 100%; margin-bottom: 10px;">¡Aceptar el Reto! 🔥</button>
+                <button id="btn-no-nivel" class="full-phrase-btn" style="width: 100%;">Seguir practicando</button>
+            </div>
+        </div>
+        
+        <!-- MODAL RETO DE NIVEL (SIN AUDIO SPOILER, 100% VISUAL) -->
+        <div id="modal-examen" class="meme-modal hidden" style="z-index: 5000;">
+            <div class="game-screen">
+                <div class="game-top-bar">
+                    <button id="btn-salir-examen" class="btn-back-juegos">✕ Salir</button>
+                    <span id="progreso-jefe" class="game-combo-badge">Palabra 1 de 3</span>
+                    <span id="vidas-jefe" style="font-size: 1.2rem;">❤️❤️❤️</span>
+                </div>
+                <div class="game-body">
+                    <h2 style="color: white; margin-bottom: 6px;">Reto de Nivel <span id="examen-nivel-texto">1</span></h2>
+                    <p class="game-instruction">Mira la imagen y arma su nombre sin ayuda de voz</p>
+                    <div id="tarjeta-examen" class="builder-card">
+                        <div id="imagen-examen" class="builder-emoji">❓</div>
+                        
+                        <div id="examen-modo-bloques" style="width: 100%;">
+                            <div id="examen-respuesta-bloques" class="slots-container"></div>
+                            <div id="examen-opciones-bloques" class="zona-bloques"></div>
+                        </div>
+
+                        <input type="text" id="input-examen" class="escritura-input hidden" placeholder="Escribe la palabra..." autocomplete="off">
+                        
+                        <button id="btn-verificar-examen" class="btn-primary-3d" style="width: 100%; margin-top: 15px;">Confirmar ✨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="datos.js" defer></script>
+    <script src="app.js" defer></script>
+    <script src="juegos.js" defer></script>
+</body>
+</html>

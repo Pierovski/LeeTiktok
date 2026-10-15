@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lee-tiktok-v7.1';
+const CACHE_NAME = 'lee-tiktok-v8.0';
 const ASSETS_OFFLINE = [
     './',
     './index.html',
@@ -16,7 +16,6 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // Guardamos cada archivo individualmente para que si uno opcional falla no rompa el resto
             return Promise.allSettled(
                 ASSETS_OFFLINE.map(url => cache.add(url))
             );

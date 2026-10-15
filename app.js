@@ -33,7 +33,7 @@ window.mostrarMensaje = function(texto, tipo = 'info') {
     setTimeout(() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
-    }, 2800);
+    }, 2600);
 };
 
 // --- SONIDOS NATIVOS ---
@@ -90,7 +90,6 @@ window.convertirSilabaAFonetica = function(silaba) {
     if (typeof FonoSilabas !== 'undefined' && FonoSilabas[limpia]) {
         return FonoSilabas[limpia];
     }
-    // Si no está en el mapa, aseguramos tilde en la última vocal + punto para que jamás deletree
     return limpia.replace(/([aeiou])$/i, (v) => ({a:'á',e:'é',i:'í',o:'ó',u:'ú'}[v.toLowerCase()] || v)) + '.';
 };
 
@@ -100,9 +99,16 @@ document.addEventListener('DOMContentLoaded', () => {
         streakDisplay: document.getElementById('streak'),
         escudoBadge: document.getElementById('escudo-badge'),
         displayNivel: document.getElementById('display-nivel'),
+        progresoTextoHeader: document.getElementById('progreso-texto-header'),
+        rangoLectora: document.getElementById('rango-lectora'),
         barraProgreso: document.getElementById('level-progress-bar'),
         mascotaEl: document.getElementById('mascota'),
         selectVozAdmin: document.getElementById('select-voz-admin'),
+        navBtns: {
+            home: document.getElementById('btn-home'),
+            juegos: document.getElementById('btn-jugar'),
+            glosario: document.getElementById('btn-glosario')
+        },
         modales: {
             admin: document.getElementById('modal-admin'),
             nivel: document.getElementById('modal-nivel'),
@@ -135,18 +141,36 @@ document.addEventListener('DOMContentLoaded', () => {
             else DOM.mascotaEl.innerText = "🥚";
         }
 
+        if (DOM.rangoLectora) {
+            const cant = (state.palabrasDominadas || []).length;
+            if (cant >= 20) DOM.rangoLectora.innerText = "⭐ Maestra Lectora";
+            else if (cant >= 10) DOM.rangoLectora.innerText = "🔥 Lectora Pro";
+            else if (cant >= 4) DOM.rangoLectora.innerText = "⚡ En Racha";
+            else DOM.rangoLectora.innerText = `Nivel ${state.nivelActual} en curso`;
+        }
+
         const root = document.documentElement;
-        if (state.nivelActual === 1) { root.style.setProperty('--accent-purple', '#bb86fc'); root.style.setProperty('--accent-coral', '#ff7f50'); }
-        else if (state.nivelActual === 2) { root.style.setProperty('--accent-purple', '#00e676'); root.style.setProperty('--accent-coral', '#18ffff'); } 
-        else if (state.nivelActual >= 3) { root.style.setProperty('--accent-purple', '#ff9100'); root.style.setProperty('--accent-coral', '#ff1744'); } 
+        if (state.nivelActual === 1) {
+            root.style.setProperty('--accent-purple', '#a855f7');
+            root.style.setProperty('--accent-coral', '#ff2a85');
+        } else if (state.nivelActual === 2) {
+            root.style.setProperty('--accent-purple', '#00e676');
+            root.style.setProperty('--accent-coral', '#00f2fe');
+        } else if (state.nivelActual >= 3) {
+            root.style.setProperty('--accent-purple', '#ff9100');
+            root.style.setProperty('--accent-coral', '#ff1744');
+        }
     });
 
     function actualizarBarraProgreso() {
         if(!DOM.barraProgreso) return;
         const totalTarjetas = document.querySelectorAll(`.card[data-nivel="${AppState.state.nivelActual}"]`).length;
         const completadas = document.querySelectorAll(`.card[data-nivel="${AppState.state.nivelActual}"].completada`).length;
-        const porcentaje = totalTarjetas === 0 ? 0 : (completadas / totalTarjetas) * 100;
+        const porcentaje = totalTarjetas === 0 ? 0 : Math.round((completadas / totalTarjetas) * 100);
         DOM.barraProgreso.style.width = `${porcentaje}%`;
+        if (DOM.progresoTextoHeader) {
+            DOM.progresoTextoHeader.innerText = `${completadas}/${totalTarjetas} (${porcentaje}%)`;
+        }
     }
 
     function registrarRachaPorLectura() {
@@ -184,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function puntuarVozEspanol(v) {
         const lang = (v.lang || '').toLowerCase();
         const name = (v.name || '').toLowerCase();
-        if (!lang.startsWith('es')) return -100; // Bloquea voces en inglés que dicen "bi"
+        if (!lang.startsWith('es')) return -100;
 
         let score = 20;
         if (lang.includes('pe') || lang.includes('419') || lang.includes('mx') || lang.includes('us')) score += 50;
@@ -195,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function cargarVoces() {
         if (!window.speechSynthesis) return;
         const todas = window.speechSynthesis.getVoices();
-        // Filtramos ESTRICTAMENTE solo voces que empiecen con "es" para jamás asignar una voz en inglés
         vocesEspanol = todas
             .filter(v => (v.lang || '').toLowerCase().startsWith('es'))
             .sort((a, b) => puntuarVozEspanol(b) - puntuarVozEspanol(a));
@@ -206,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ).join('');
 
             DOM.selectVozAdmin.innerHTML = `
-                <option value="AUTO_CLOUD" ${AppState.state.vozPreferidaURI === 'AUTO_CLOUD' ? 'selected' : ''}>☁️ Voz Humana Natural (Online + Offline)</option>
+                <option value="AUTO_CLOUD" ${AppState.state.vozPreferidaURI === 'AUTO_CLOUD' ? 'selected' : ''}>☁️ Voz Humana Natural (Recomendada)</option>
                 ${opcionesSistema}
             `;
         }
@@ -217,6 +240,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.onvoiceschanged = cargarVoces;
     }
 
+    function detenerVoz() {
+        window.speechSynthesis?.cancel();
+        cloudAudioPlayer.pause();
+    }
+
     function hablarConMotorLocal(textoLimpio, vel = 0.88, onEndCallback = null) {
         if (!window.speechSynthesis) {
             if (onEndCallback) onEndCallback();
@@ -225,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.cancel();
         setTimeout(() => {
             const u = new SpeechSynthesisUtterance(textoLimpio);
-            // Forzamos idioma español de Perú aunque el celular no reporte voces cargadas
             u.lang = 'es-PE';
             u.rate = vel;
             u.pitch = 1.0;
@@ -247,18 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const textoLimpio = (texto || '').replace(/-/g, '');
         if (!textoLimpio) return;
 
-        // Si está elegido el modo Nube Humana y hay internet, intentamos voz neuronal de Google Latino
         if (AppState.state.vozPreferidaURI === 'AUTO_CLOUD' && navigator.onLine) {
             try {
-                window.speechSynthesis?.cancel();
-                cloudAudioPlayer.pause();
+                detenerVoz();
                 const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es-419&q=${encodeURIComponent(textoLimpio)}`;
                 cloudAudioPlayer.src = url;
-                cloudAudioPlayer.playbackRate = Math.min(1.1, Math.max(0.8, vel + 0.05));
-                cloudAudioPlayer.play().catch(() => {
-                    // Si el navegador bloquea el stream externo, cae inmediatamente al motor local en español
-                    hablarConMotorLocal(textoLimpio, vel);
-                });
+                cloudAudioPlayer.playbackRate = Math.min(1.08, Math.max(0.82, vel + 0.05));
+                cloudAudioPlayer.play().catch(() => hablarConMotorLocal(textoLimpio, vel));
                 return;
             } catch (err) {
                 hablarConMotorLocal(textoLimpio, vel);
@@ -274,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const spansPalabra = cardHtml.querySelectorAll('.palabra');
             spansPalabra.forEach(s => s.classList.remove('word-highlight'));
 
-            // Animación sincronizada de resaltado palabra por palabra (funciona tanto en Nube como Offline en Android)
             let indexActivo = 0;
             const duracionPorPalabra = Math.max(380, Math.round(520 / vel));
             const intervalo = setInterval(() => {
@@ -294,8 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             if (AppState.state.vozPreferidaURI === 'AUTO_CLOUD' && navigator.onLine) {
-                window.speechSynthesis?.cancel();
-                cloudAudioPlayer.pause();
+                detenerVoz();
                 const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es-419&q=${encodeURIComponent(textoLimpio)}`;
                 cloudAudioPlayer.src = url;
                 cloudAudioPlayer.playbackRate = 0.95;
@@ -314,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             AppState.update('nivelActual', AppState.state.nivelActual - 1);
             inicializarTarjetas();
         } else {
-            window.mostrarMensaje("Ya estás en el Nivel 1", "info");
+            window.mostrarMensaje("Estás en el Nivel 1", "info");
         }
     });
 
@@ -323,18 +343,18 @@ document.addEventListener('DOMContentLoaded', () => {
             AppState.update('nivelActual', AppState.state.nivelActual + 1);
             inicializarTarjetas();
         } else {
-            window.mostrarMensaje("¡Estás en el nivel máximo!", "info");
+            window.mostrarMensaje("¡Nivel máximo alcanzado!", "info");
         }
     });
 
     function lanzarConfeti() {
         const fragment = document.createDocumentFragment();
-        const colores = ['#ff7f50', '#bb86fc', '#00e676', '#ffeb3b', '#00bfff'];
+        const colores = ['#ff2a85', '#a855f7', '#00e676', '#00f2fe', '#ffeb3b'];
         for(let i=0; i<45; i++) {
             let confeti = document.createElement('div');
             confeti.className = 'confeti';
             confeti.style.left = `${Math.random() * 100}vw`;
-            confeti.style.animationDuration = `${Math.random() * 1.8 + 1.8}s`;
+            confeti.style.animationDuration = `${Math.random() * 1.8 + 1.6}s`;
             confeti.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
             fragment.appendChild(confeti);
         }
@@ -342,16 +362,68 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => document.querySelectorAll('.confeti').forEach(c => c.remove()), 3500);
     }
 
-    function toggleModal(modalElement, mostrar) {
+    // =========================================================================
+    // NAVEGACIÓN INTELIGENTE Y SOPORTE PARA EL BOTÓN "ATRÁS" DE ANDROID
+    // =========================================================================
+    const listaMinijuegos = () => [
+        DOM.modales.swipe,
+        DOM.modales.letras,
+        DOM.modales.silabas,
+        DOM.modales.memorama,
+        DOM.modales.oraciones,
+        DOM.modales.escritura
+    ];
+
+    function marcarTabActivo(nombre) {
+        Object.values(DOM.navBtns).forEach(b => b?.classList.remove('active'));
+        if (DOM.navBtns[nombre]) DOM.navBtns[nombre].classList.add('active');
+    }
+
+    function toggleModal(modalElement, mostrar, pushHistory = true) {
         if(!modalElement) return;
         if(mostrar) {
             modalElement.classList.remove('hidden');
             setTimeout(() => modalElement.classList.add('active'), 10);
+            if (pushHistory) {
+                history.pushState({ modalAbierto: modalElement.id }, '');
+            }
         } else {
+            detenerVoz();
             modalElement.classList.remove('active');
-            setTimeout(() => modalElement.classList.add('hidden'), 300);
+            setTimeout(() => modalElement.classList.add('hidden'), 220);
         }
     }
+
+    function cerrarTodosModales() {
+        Object.values(DOM.modales).forEach(m => {
+            if (m && m.classList.contains('active')) {
+                toggleModal(m, false, false);
+            }
+        });
+    }
+
+    // Volver de un minijuego directamente al menú de Juegos (Zona Arcade), NUNCA al inicio
+    function volverAlMenuJuegos() {
+        detenerVoz();
+        listaMinijuegos().forEach(m => {
+            if (m) toggleModal(m, false, false);
+        });
+        toggleModal(DOM.modales.menuJuegos, true, false);
+        marcarTabActivo('juegos');
+    }
+
+    // Captura del botón físico o gesto "Atrás" del celular Android
+    window.addEventListener('popstate', () => {
+        const algunMinijuegoActivo = listaMinijuegos().some(m => m && m.classList.contains('active'));
+        if (algunMinijuegoActivo) {
+            // Si estaba dentro de un minijuego, regresa al menú de Juegos
+            volverAlMenuJuegos();
+            return;
+        }
+        // Si estaba en el menú de juegos, bóveda o examen, cierra y vuelve al Feed
+        cerrarTodosModales();
+        marcarTabActivo('home');
+    });
 
     function actualizarFocoSilaba(card) {
         card.querySelectorAll('.silaba').forEach(s => s.classList.remove('silaba-foco'));
@@ -371,13 +443,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let datosFinales = [...historias, ...sueltas];
         
         if (datosFinales.length === 0) {
-            DOM.feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Nivel Completado! 🎉</h2><p>Usa las flechas de arriba o explora los minijuegos.</p></div></div>`;
+            DOM.feedContainer.innerHTML = `<div class="card"><div class="glass-content"><h2>¡Nivel Completado! 🎉</h2><p>Explora la Zona Arcade para seguir ganando trofeos.</p></div></div>`;
             if(DOM.barraProgreso) DOM.barraProgreso.style.width = '100%';
             return;
         }
 
         const htmlTarjetas = datosFinales.map(item => {
-            let textoBadge = item.historia ? `📖 Historia ${item.historia} • Parte ${item.orden}` : `Nivel ${item.nivel} • ${item.tipo.toUpperCase()}`;
+            let textoBadge = item.historia ? `📖 Historia ${item.historia} • Parte ${item.orden}` : `Nivel ${item.nivel} •${item.tipo.toUpperCase()}`;
             let emojiVisual = item.iconoBoton || '✨';
 
             let htmlProcesado = item.texto.split(' ').map(p => 
@@ -391,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="badge">${textoBadge}</div>
                             <div class="card-emoji">${emojiVisual}</div>
                             <p class="reading-text">${htmlProcesado}</p>
-                            <button class="play-trigger full-phrase-btn">🔊 Escuchar frase</button>
+                            <button class="play-trigger full-phrase-btn">🔊 Escuchar toda la frase</button>
                             <div class="scroll-hint hidden">⬆️ Desliza hacia arriba</div>
                         </div>
                     </section>`;
@@ -404,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarBarraProgreso();
     }
 
-    // --- LECTURA DE SÍLABA SIN DELETREO ---
+    // --- LECTURA DE SÍLABA EN EL FEED ---
     window.leerSilaba = function(elementoHtml, silaba) {
         const silabaFonetica = window.convertirSilabaAFonetica(silaba);
         window.leerTextoSimple(silabaFonetica, 0.85);
@@ -443,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             leerFraseConResaltado(fraseCompleta, card, 0.9).then(() => verificarSubidaDeNivel(card));
-        }, 650);
+        }, 600);
 
         let oldBtn = btnCont.querySelector('.full-phrase-btn');
         if (oldBtn) {
@@ -485,45 +557,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.getElementById('btn-no-nivel')?.addEventListener('click', () => toggleModal(DOM.modales.nivel, false));
+    document.getElementById('btn-no-nivel')?.addEventListener('click', () => toggleModal(DOM.modales.nivel, false, false));
 
     inicializarTarjetas();
 
-    // --- NAVEGACIÓN ---
-    document.getElementById('btn-home')?.addEventListener('click', () => DOM.feedContainer.scrollTo({top: 0, behavior: 'smooth'}));
-    document.getElementById('btn-jugar')?.addEventListener('click', () => toggleModal(DOM.modales.menuJuegos, true));
-    document.getElementById('btn-cerrar-menu-juegos')?.addEventListener('click', () => toggleModal(DOM.modales.menuJuegos, false));
+    // --- BARRA DE NAVEGACIÓN INFERIOR ---
+    DOM.navBtns.home?.addEventListener('click', () => {
+        cerrarTodosModales();
+        marcarTabActivo('home');
+        DOM.feedContainer.scrollTo({top: 0, behavior: 'smooth'});
+    });
 
-    document.getElementById('btn-glosario')?.addEventListener('click', () => {
+    DOM.navBtns.juegos?.addEventListener('click', () => {
+        cerrarTodosModales();
+        toggleModal(DOM.modales.menuJuegos, true);
+        marcarTabActivo('juegos');
+    });
+
+    document.getElementById('btn-cerrar-menu-juegos')?.addEventListener('click', () => {
+        toggleModal(DOM.modales.menuJuegos, false, false);
+        marcarTabActivo('home');
+    });
+
+    DOM.navBtns.glosario?.addEventListener('click', () => {
+        cerrarTodosModales();
         const dominadas = AppState.state.palabrasDominadas;
         document.getElementById('contador-glosario').innerText = dominadas.length;
         document.getElementById('grid-glosario').innerHTML = dominadas.length
             ? dominadas.map(p => `<div class="insignia-glosario" onclick="window.leerTextoSimple('${p}', 0.85)">${p} 🔊</div>`).join('')
-            : `<p style="grid-column: 1 / -1; color: var(--text-dim);">Juega en la Zona de Práctica para coleccionar palabras aquí.</p>`;
+            : `<p style="grid-column: 1 / -1; color: var(--text-dim); padding: 20px;">Supera rondas en la Zona Arcade para desbloquear tu colección de palabras.</p>`;
         toggleModal(DOM.modales.glosario, true);
+        marcarTabActivo('glosario');
     });
-    document.getElementById('btn-cerrar-glosario')?.addEventListener('click', () => toggleModal(DOM.modales.glosario, false));
 
+    document.getElementById('btn-cerrar-glosario')?.addEventListener('click', () => {
+        toggleModal(DOM.modales.glosario, false, false);
+        marcarTabActivo('home');
+    });
+
+    // --- ONBOARDING ---
     const onboarding = document.getElementById('onboarding');
     if (localStorage.getItem('onboardingVisto') === 'true') { 
         if(onboarding) onboarding.style.display = 'none'; 
     }
     document.getElementById('btn-empezar')?.addEventListener('click', () => {
-        onboarding.classList.add('oculto');
+        onboarding.classList.add('hidden');
         localStorage.setItem('onboardingVisto', 'true'); 
-        setTimeout(() => window.leerTextoSimple(`Bienvenida al Nivel ${AppState.state.nivelActual}. Toca cada sílaba para leer.`, 0.9), 300); 
-        setTimeout(() => onboarding.style.display = 'none', 500);
     });
 
-    document.getElementById('btn-leer-ui')?.addEventListener('click', (e) => {
-        let targets = document.querySelectorAll('.meme-modal.active .leer-ui-target');
-        let textoLeido = Array.from(targets).map(t => t.innerText).join('. ') || "Toca las sílabas iluminadas de izquierda a derecha para leer la frase.";
-        e.target.classList.add('tts-activo');
-        window.leerTextoSimple(textoLeido, 0.9);
-        setTimeout(() => e.target.classList.remove('tts-activo'), 2000);
-    });
-
-    // --- PANEL ADMIN ---
+    // --- PANEL ADMIN SECRETO (5 TOQUES EN EL AVATAR) ---
     let adminTaps = 0;
     document.getElementById('admin-trigger')?.addEventListener('click', () => {
         adminTaps++;
@@ -537,11 +619,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     DOM.selectVozAdmin?.addEventListener('change', (e) => {
         AppState.update('vozPreferidaURI', e.target.value);
-        window.leerTextoSimple("Hola, esta es mi voz en español para practicar contigo.", 0.9);
+        window.leerTextoSimple("Hola, esta es mi voz para practicar.", 0.9);
     });
 
     document.getElementById('btn-probar-voz')?.addEventListener('click', () => {
-        window.leerTextoSimple("Probando sílabas: má, pé, sí, ló, tú. ¡Suena muy claro!", 0.88);
+        window.leerTextoSimple("Probando sílabas claras: má, pé, sí, ló, tú.", 0.88);
     });
     
     document.getElementById('btn-guardar-admin')?.addEventListener('click', () => {
@@ -559,21 +641,23 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             const nuevoDic = [...AppState.state.dicAdmin, nuevaPalabra];
             AppState.update('dicAdmin', nuevoDic);
-            window.mostrarMensaje("¡Palabra personalizada guardada!", "success");
+            window.mostrarMensaje("¡Palabra guardada con su ícono!", "success");
             document.getElementById('admin-palabra').value = "";
             document.getElementById('admin-emoji').value = "";
         } else {
-            window.mostrarMensaje("Completa la palabra y el emoji", "error");
+            window.mostrarMensaje("Escribe la palabra y su emoji", "error");
         }
     });
-    document.getElementById('btn-cerrar-admin')?.addEventListener('click', () => toggleModal(DOM.modales.admin, false));
+    document.getElementById('btn-cerrar-admin')?.addEventListener('click', () => toggleModal(DOM.modales.admin, false, false));
 
+    // --- API EXPORTADA PARA MINIJUEGOS ---
     window.AppJuegosAPI = {
         estado: AppState,
         audio: AudioUI,
         dom: DOM,
         obtenerDiccionario: obtenerDiccionario,
         toggleModal: toggleModal,
+        volverAlMenuJuegos: volverAlMenuJuegos,
         lanzarConfeti: lanzarConfeti,
         inicializarTarjetas: inicializarTarjetas,
         registrarPalabraDominada: function(palabra) {
